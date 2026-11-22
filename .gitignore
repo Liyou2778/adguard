@@ -1,0 +1,46 @@
+# ---- secrets / local config ----
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+
+# ---- Go ----
+services/gateway-go/bin/
+services/gateway-go/vendor/
+*.exe
+*.test
+*.out
+
+# ---- Java / Maven ----
+services/control-plane-java/target/
+services/control-plane-java/.mvn/wrapper/maven-wrapper.jar
+*.class
+*.jar
+!**/wrapper/*.jar
+
+# ---- Python ----
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+*.egg-info/
+dist/
+build/
+
+# ---- data / models / artifacts ----
+data/
+models/
+artifacts/
+*.db
+*.db-shm
+*.db-wal
+
+# ---- IDE / OS ----
+.idea/
+.vscode/
+*.iml
+.DS_Store
+Thumbs.db
