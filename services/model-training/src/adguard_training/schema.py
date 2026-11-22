@@ -75,11 +75,15 @@ def _extract_json(text: str) -> dict[str, Any]:
     try:
         return json.loads(text)
     except json.JSONDecodeError:
-        start = text.find("{")
-        end = text.rfind("}")
-        if start >= 0 and end > start:
+        pass
+    start = text.find("{")
+    end = text.rfind("}")
+    if start >= 0 and end > start:
+        try:
             return json.loads(text[start : end + 1])
-        raise OutputParseError(f"no JSON object in output: {text[:200]!r}")
+        except json.JSONDecodeError:
+            pass
+    raise OutputParseError(f"no valid JSON object in output: {text[:200]!r}")
 
 
 def parse_output(text: str) -> ParsedOutput:

@@ -70,5 +70,10 @@ def test_reject_non_json():
         parse_output("我认为这条广告违规")
 
 
+def test_malformed_json_raises_output_parse_error():
+    with pytest.raises(OutputParseError):
+        parse_output('{"decision":"block","violations":[{"rule_id":"ADV-LAW-ART9-3" "clause_id":"x"}]}')
+
+
 def test_gold_output_roundtrip():
     assert parse_output(gold_output("pass", [])).decision == "pass"

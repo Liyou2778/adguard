@@ -102,7 +102,7 @@ def main() -> None:
         logging_steps=config["train"]["logging_steps"],
         save_steps=config["train"]["save_steps"],
         save_total_limit=2,
-        eval_strategy="steps",
+        eval_strategy=config["train"].get("eval_strategy", "no"),
         eval_steps=config["train"]["save_steps"],
         fp16=not torch.cuda.is_bf16_supported(),
         bf16=torch.cuda.is_bf16_supported(),

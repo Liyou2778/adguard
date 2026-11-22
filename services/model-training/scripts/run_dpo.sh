@@ -7,7 +7,7 @@ export PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True
 export HF_HOME=/root/adguard-train/hf-cache
 export ADGUARD_PARSED_RULES=/root/adguard-train/data/parsers/parsed_m2.json
 ADAPTER="${1:-runs/sft-qwen25-3b-qlora-v1/artifacts/final}"
-python - <<'PY'
+.venv/bin/python - <<'PY'
 import json
 cfg = json.loads(open("configs/dpo_qwen25_3b_qlora.json").read())
 cfg["model_id"] = "/root/models/qwen2.5-3b-instruct"

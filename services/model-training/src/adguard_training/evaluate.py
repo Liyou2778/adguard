@@ -21,7 +21,7 @@ os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 import torch  # noqa: E402
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig  # noqa: E402
 
-from .prompts import load_rule_catalog, user_prompt  # noqa: E402
+from .prompts import system_prompt, user_prompt  # noqa: E402
 from .registry import finish_run, start_run  # noqa: E402
 from .schema import OutputParseError, parse_output  # noqa: E402
 
@@ -51,10 +51,12 @@ def load_model(model_id: str, adapter: Path | None):
 
 
 def build_prompt(text: str, asset_type: str = "text") -> str:
-    catalog = load_rule_catalog()
-    messages = [{"role": "system", "content": f"你是 AdGuard 营销素材合规初审引擎。\n\n{catalog}"},
-                {"role": "user", "content": user_prompt(text, asset_type)}]
-    return messages
+    # MUST be identical to the training prompt (prompts.build_record) - otherwise the
+    # model sees a different system prompt at eval time and metrics measure nothing.
+    return [
+        {"role": "system", "content": system_prompt()},
+        {"role": "user", "content": user_prompt(text, asset_type)},
+    ]
 
 
 @torch.no_grad()
@@ -71,8 +73,11 @@ def generate_batch(model, tokenizer, texts: list[str], max_new_tokens: int) -> l
 
 
 def evaluate(model_id: str, adapter: Path | None, split: str, data_dir: Path,
-             name: str, max_new_tokens: int = 192, batch_size: int = 8) -> dict[str, Any]:
+             name: str, max_new_tokens: int = 192, batch_size: int = 8,
+             limit: int | None = None) -> dict[str, Any]:
     rows = load_jsonl(data_dir / f"{split}.jsonl")
+    if limit:
+        rows = rows[:limit]
     run_dir = start_run(name, {"model_id": model_id, "adapter": str(adapter or ""), "split": split,
                                "data_dir": str(data_dir), "max_new_tokens": max_new_tokens,
                                "batch_size": batch_size}, data_dir)
@@ -157,11 +162,12 @@ def main() -> None:
     parser.add_argument("--name", default=None)
     parser.add_argument("--max-new-tokens", type=int, default=192)
     parser.add_argument("--batch-size", type=int, default=8)
+    parser.add_argument("--limit", type=int, default=None)
     args = parser.parse_args()
 
     name = args.name or f"eval-{args.split}-{(args.adapter.name if args.adapter else 'base')}"
     metrics = evaluate(args.model_id, args.adapter, args.split, args.data_dir, name,
-                       args.max_new_tokens, args.batch_size)
+                       args.max_new_tokens, args.batch_size, args.limit)
     print(json.dumps({k: metrics[k] for k in
                       ("split", "recall", "false_positive_rate", "wrong_clause_rate",
                        "json_parse_rate", "gate_checks", "gate_passed", "totals")},

@@ -29,7 +29,7 @@ import torch  # noqa: E402
 from peft import PeftModel  # noqa: E402
 from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig  # noqa: E402
 
-from .evaluate import generate  # noqa: E402
+from .evaluate import generate_batch  # noqa: E402
 from .registry import finish_run, start_run  # noqa: E402
 
 
@@ -61,7 +61,7 @@ def generate_distill_data(teacher_model_id: str, teacher_adapter: Path,
     model, tokenizer = load_teacher(teacher_model_id, teacher_adapter)
     outputs: list[dict] = []
     for index, row in enumerate(rows, start=1):
-        generated = generate(model, tokenizer, row["text"], max_new_tokens)
+        generated = generate_batch(model, tokenizer, [row["text"]], max_new_tokens)[0]
         outputs.append(
             {
                 "id": f"distill-{index:05d}",

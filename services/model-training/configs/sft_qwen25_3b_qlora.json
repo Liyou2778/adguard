@@ -15,8 +15,9 @@
     "lr_scheduler": "cosine",
     "warmup_ratio": 0.03,
     "logging_steps": 10,
-    "save_steps": 100,
+    "save_steps": 50,
     "max_seq_length": 1024,
+    "eval_strategy": "no",
     "seed": 20261123
   },
   "notes": "M4 local 3B QLoRA SFT on rule-teacher labels (RTX 4060 Laptop 8GB, WSL2 CUDA)"
