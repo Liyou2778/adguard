@@ -39,6 +39,7 @@ artifacts/
 *.db-wal
 .pull-*.log
 *.log
+.tmp/
 
 # ---- IDE / OS ----
 .idea/

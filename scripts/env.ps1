@@ -1,4 +1,4 @@
-# AdGuard (P2) - session environment bootstrap
+﻿# AdGuard (P2) - session environment bootstrap
 # Usage:  . .\scripts\env.ps1      (dot-source: must be dot-sourced, not executed)
 #
 # Why this file exists:

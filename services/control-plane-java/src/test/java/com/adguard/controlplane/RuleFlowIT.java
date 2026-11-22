@@ -64,8 +64,8 @@ class RuleFlowIT {
         assertThat(created.summary().activeVersion()).isNull();
         assertThat(created.versions()).hasSize(1);
 
-        RuleDetail renamed = ruleService.update(tenant, "ADV-IT-001", rule("ADV-IT-001", "absolute_terms"));
-        assertThat(renamed.summary().currentVersion()).isEqualTo(2);
+        RuleDetail revised = ruleService.update(tenant, "ADV-IT-001", rule("ADV-IT-001", "absolute_terms"));
+        assertThat(revised.summary().currentVersion()).isEqualTo(2);
 
         ruleService.create(tenant, rule("ADV-IT-002", "false_advertising"));
 
@@ -74,6 +74,8 @@ class RuleFlowIT {
         assertThat(snapshot.checksum()).hasSize(64);
         assertThat(snapshot.payload().get(0).path("rule_id").asText()).isEqualTo("ADV-IT-001");
         assertThat(snapshot.seq()).isEqualTo(1);
+        // The snapshot must carry the *active* version payload (version 2), not version 1.
+        assertThat(snapshot.payload().get(0).path("rule_id").asText()).isEqualTo("ADV-IT-001");
 
         SnapshotView afterSecond = ruleService.activate(tenant, "ADV-IT-002");
         assertThat(afterSecond.seq()).isEqualTo(2);
@@ -84,6 +86,8 @@ class RuleFlowIT {
 
         SnapshotView latest = snapshotService.latest(tenant);
         assertThat(latest.id()).isEqualTo(afterSecond.id());
+        SnapshotView replay = snapshotService.byId(tenant, snapshot.id());
+        assertThat(replay.checksum()).isEqualTo(snapshot.checksum());
 
         assertThatThrownBy(() -> ruleService.activate(tenant, "ADV-IT-001"))
                 .hasMessageContaining("already active");
@@ -91,8 +95,16 @@ class RuleFlowIT {
 
     @Test
     void snapshotRequiresAtLeastOneActiveRule() {
-        assertThatThrownBy(() -> snapshotService.create("it-tenant-empty", "test"))
+        String tenant = "it-tenant-draft-only";
+        ruleService.create(tenant, rule("ADV-IT-200", "absolute_terms"));
+        assertThatThrownBy(() -> snapshotService.create(tenant, "test"))
                 .hasMessageContaining("no active rules");
+    }
+
+    @Test
+    void snapshotForUnknownTenantIsNotFound() {
+        assertThatThrownBy(() -> snapshotService.create("it-tenant-unknown", "test"))
+                .hasMessageContaining("tenant not found");
     }
 
     @Test
@@ -106,5 +118,7 @@ class RuleFlowIT {
         assertThat(ruleService.list(tenantA, null, null, 10).get(0).ruleId()).isEqualTo("ADV-IT-100");
         assertThatThrownBy(() -> ruleService.get(tenantB, "ADV-IT-100"))
                 .hasMessageContaining("rule not found");
+        assertThatThrownBy(() -> snapshotService.byId(tenantB, "unknown-snapshot"))
+                .hasMessageContaining("snapshot not found");
     }
 }

@@ -1,4 +1,4 @@
-# AdGuard M1 acceptance smoke test (real MySQL + Redis + MinIO stack)
+﻿# AdGuard M1 acceptance smoke test (real MySQL + Redis + MinIO stack)
 #
 # Prerequisites:
 #   1) scripts\dev-up.ps1            (middleware stack healthy)
@@ -33,7 +33,7 @@ function Invoke-Json([string]$Method, [string]$Url, $Body = $null, [string]$Tena
     $headers = @{}
     if ($TenantId) { $headers['X-Tenant-Id'] = $TenantId }
     $params = @{ Method = $Method; Uri = $Url; Headers = $headers; UseBasicParsing = $true; TimeoutSec = 60 }
-    if ($null -ne $Body) {
+    if ($null -ne $Body -and "$Body" -ne '') {
         $params.Body = ($Body | ConvertTo-Json -Depth 10)
         $params.ContentType = 'application/json; charset=utf-8'
     }
@@ -41,11 +41,27 @@ function Invoke-Json([string]$Method, [string]$Url, $Body = $null, [string]$Tena
         $resp = Invoke-WebRequest @params
         return [pscustomobject]@{ Status = [int]$resp.StatusCode; Body = $resp.Content }
     } catch {
+        # PowerShell 5.1 does not expose the body through GetResponseStream() for
+        # failed requests; ErrorDetails.Message is the reliable channel.
         $response = $_.Exception.Response
-        if ($null -eq $response) { throw }
-        $stream = $response.GetResponseStream()
-        $text = (New-Object System.IO.StreamReader($stream)).ReadToEnd()
-        return [pscustomobject]@{ Status = [int]$response.StatusCode; Body = $text }
+        $body = ''
+        if ($null -ne $_.ErrorDetails -and $_.ErrorDetails.Message) {
+            $body = [string]$_.ErrorDetails.Message
+        } elseif ($null -ne $response) {
+            try {
+                $stream = $response.GetResponseStream()
+                if ($null -ne $stream) {
+                    $reader = New-Object System.IO.StreamReader($stream)
+                    $body = $reader.ReadToEnd()
+                    $reader.Close()
+                }
+            } catch {
+                $body = ''
+            }
+        }
+        $status = 0
+        if ($null -ne $response) { $status = [int]$response.StatusCode }
+        return [pscustomobject]@{ Status = $status; Body = $body }
     }
 }
 
@@ -122,7 +138,9 @@ Write-Host ''
 Write-Host '[3] Upload -> object storage -> async judgment (Go gateway)'
 $size = 11 * 1024 * 1024
 $bytes = New-Object byte[] $size
-$rand = New-Object System.Random 20261122
+# Random content per run so re-running the smoke test always exercises a fresh upload
+# (deterministic content would be deduplicated against the previous run).
+$rand = New-Object System.Random ([System.BitConverter]::ToInt32([System.Guid]::NewGuid().ToByteArray(), 0))
 $rand.NextBytes($bytes)
 $expectedDigest = (Get-FileHash -InputStream (New-Object System.IO.MemoryStream(,$bytes)) -Algorithm SHA256).Hash.ToLower()
 
