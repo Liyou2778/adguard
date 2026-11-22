@@ -33,6 +33,31 @@ jobs:
         working-directory: adguard/services/gateway-go
         run: go build -o /tmp/gateway ./cmd/gateway
 
+  python-pipeline:
+    name: Python pipeline (tests + M2 metrics gates)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: install
+        working-directory: adguard/services/pipeline-py
+        run: pip install -e ".[dev]"
+      - name: pytest
+        working-directory: adguard/services/pipeline-py
+        run: python -m pytest
+      - name: variant normalization gate (>= 0.95)
+        working-directory: adguard/services/pipeline-py
+        run: |
+          python -m adguard_pipeline.dataset
+          python -m adguard_pipeline.evaluation
+      - name: clause parser gate (>= 0.90)
+        working-directory: adguard/services/pipeline-py
+        run: |
+          python -m adguard_pipeline.clause_parser
+          python -m adguard_pipeline.clause_eval
+
   java-control-plane:
     name: Java control plane (unit + Testcontainers IT)
     runs-on: ubuntu-latest

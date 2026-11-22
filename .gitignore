@@ -47,3 +47,11 @@ artifacts/
 *.iml
 .DS_Store
 Thumbs.db
+
+# python build/temp dirs created by pip editable installs (never commit)
+pip-build-env-*/
+pip-modern-metadata-*/
+pip-ephem-wheel-cache-*/
+pip-install-*/
+pip-unpack-*/
+pip-metadata-*/
