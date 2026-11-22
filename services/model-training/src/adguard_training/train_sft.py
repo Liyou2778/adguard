@@ -18,7 +18,7 @@ from pathlib import Path
 os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
 
 import torch  # noqa: E402
-from datasets import load_dataset  # noqa: E402
+from datasets import Dataset, load_dataset  # noqa: E402
 from peft import LoraConfig, get_peft_model, prepare_model_for_kbit_training  # noqa: E402
 from transformers import (  # noqa: E402
     AutoModelForCausalLM,
@@ -88,8 +88,8 @@ def main() -> None:
     rule_catalog = load_rule_catalog()
     train_rows = load_jsonl(args.data_dir / "sft_train.jsonl")
     val_rows = load_jsonl(args.data_dir / "sft_val.jsonl")
-    train_dataset = to_text_dataset(train_rows, tokenizer, rule_catalog)
-    val_dataset = to_text_dataset(val_rows, tokenizer, rule_catalog)
+    train_dataset = Dataset.from_list(to_text_dataset(train_rows, tokenizer, rule_catalog))
+    val_dataset = Dataset.from_list(to_text_dataset(val_rows, tokenizer, rule_catalog))
 
     training_args = TrainingArguments(
         output_dir=str(run_dir / "artifacts"),

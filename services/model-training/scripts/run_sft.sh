@@ -10,7 +10,7 @@ CONFIG="${1:-configs/sft_qwen25_3b_qlora.json}"
 MODEL_DIR=/root/models/qwen2.5-3b-instruct
 
 # point model_id at local weights (training is fully offline)
-python - "$CONFIG" "$MODEL_DIR" <<'PY'
+.venv/bin/python - "$CONFIG" "$MODEL_DIR" <<'PY'
 import json, sys
 cfg_path, model_dir = sys.argv[1], sys.argv[2]
 cfg = json.loads(open(cfg_path).read())

@@ -58,6 +58,11 @@ if (Test-Path $Python) {
             & $Python -m adguard_pipeline.retrieval.evaluation --embedder hashing --no-enforce
         }
     }
+    Run-Step 'm4 data/schema tests' {
+        Set-Location $PipelineDir
+        $env:PYTHONPATH = Join-Path $repo 'services\model-training\src'
+        & $Python -m pytest ..\model-training\tests -q
+    }
 } else {
     Write-Host ''
     Write-Host 'WARN: pipeline venv missing (services/pipeline-py/.venv) - python checks skipped' -ForegroundColor Yellow
