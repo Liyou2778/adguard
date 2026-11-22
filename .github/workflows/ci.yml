@@ -68,7 +68,7 @@ jobs:
       - name: M4 data/schema tests
         working-directory: adguard/services/pipeline-py
         env:
-          PYTHONPATH: ../model-training/src
+          PYTHONPATH: ../model-training/src:../model-training
         run: python -m pytest ../model-training/tests
 
   java-control-plane:

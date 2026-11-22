@@ -60,7 +60,7 @@ if (Test-Path $Python) {
     }
     Run-Step 'm4 data/schema tests' {
         Set-Location $PipelineDir
-        $env:PYTHONPATH = Join-Path $repo 'services\model-training\src'
+        $env:PYTHONPATH = ((Join-Path $repo 'services\model-training\src') + ';' + (Join-Path $repo 'services\model-training'))
         & $Python -m pytest ..\model-training\tests -q
     }
 } else {
