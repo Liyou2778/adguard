@@ -61,7 +61,16 @@ def main() -> None:
     )
     model = PeftModel.from_pretrained(model, str(args.sft_adapter), is_trainable=True)
 
-    dataset = Dataset.from_list(load_pairs(args.data_dir / "dpo_pairs.jsonl"))
+    def format_pairs(pairs):
+        formatted = []
+        for pair in pairs:
+            prompt = tokenizer.apply_chat_template(
+                pair["prompt"], tokenize=False, add_generation_prompt=True
+            )
+            formatted.append({"prompt": prompt, "chosen": pair["chosen"], "rejected": pair["rejected"]})
+        return formatted
+
+    dataset = Dataset.from_list(format_pairs(load_pairs(args.data_dir / "dpo_pairs.jsonl")))
     split = dataset.train_test_split(test_size=0.05, seed=config["train"]["seed"])
 
     training_args = DPOConfig(
