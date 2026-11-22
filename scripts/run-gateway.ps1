@@ -1,4 +1,4 @@
-# AdGuard M1 - run the Go gateway on :8080
+# AdGuard M3 - run the Go gateway on :8080
 # Usage: powershell -ExecutionPolicy Bypass -File .\scripts\run-gateway.ps1
 $ErrorActionPreference = 'Stop'
 $repo = Split-Path -Parent $PSScriptRoot
@@ -14,6 +14,10 @@ if (-not $env:GATEWAY_MINIO_ACCESS_KEY)   { $env:GATEWAY_MINIO_ACCESS_KEY = 'min
 if (-not $env:GATEWAY_MINIO_SECRET_KEY)   { $env:GATEWAY_MINIO_SECRET_KEY = 'minioadmin' }
 if (-not $env:GATEWAY_MINIO_BUCKET)       { $env:GATEWAY_MINIO_BUCKET = 'adguard-assets' }
 if (-not $env:GATEWAY_CONTROL_PLANE_URL)  { $env:GATEWAY_CONTROL_PLANE_URL = 'http://127.0.0.1:8081' }
+# M3 judging: rule judge calls the Python pipeline (M2 matcher + M3 clause retrieval).
+# Set GATEWAY_JUDGE_BACKEND=stub to fall back to the M1 placeholder judge.
+if (-not $env:GATEWAY_PIPELINE_URL)       { $env:GATEWAY_PIPELINE_URL = 'http://127.0.0.1:8090' }
+if (-not $env:GATEWAY_JUDGE_BACKEND)      { $env:GATEWAY_JUDGE_BACKEND = 'rule' }
 
-Write-Host '[run-gateway] starting Go gateway on :8080 ...'
+Write-Host "[run-gateway] starting Go gateway on :8080 (judge backend: $env:GATEWAY_JUDGE_BACKEND) ..."
 go run ./cmd/gateway

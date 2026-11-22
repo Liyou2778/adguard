@@ -12,7 +12,8 @@
 | **M0** | 环境就绪（Docker / GPU / JDK 21 / Go / Maven / Python） | ✅ 2026-11-22 通过（7/7）→ [报告](docs/M0-环境就绪报告.md) |
 | **M1** | 骨架：Go 网关 + Java 控制面 + compose 中间件 + CI | ✅ 2026-11-22 通过（冒烟 29/29）→ [验收报告](docs/M1-验收报告.md) |
 | **M2** | 法规结构化：规则模型、7 类变形归一化、条款解析器 | ✅ 2026-11-22 通过（变体 1377/1377、条款 38/38）→ [验收报告](docs/M2-验收报告.md) |
-| M3 | 知识工程：条款级切分、多路索引、rerank、增量索引、NDCG | ⏳ 下一步 |
+| **M3** | 知识工程：条款级多路检索、rerank、增量索引一致性、规则判定 | ✅ 2026-11-22 通过（material R@5 92.6%、冒烟 21/21）→ [验收报告](docs/M3-验收报告.md) |
+| M4 | 模型工程：标注集、SFT、DPO、蒸馏、门禁 | ⏳ 下一步 |
 | M3 | 知识工程：条款级切分、多路索引、rerank、增量索引、NDCG | 未开始 |
 | M4 | 模型工程：标注集、SFT、DPO、蒸馏、门禁 | 未开始 |
 | M5 | 推理与压测：vLLM / SGLang 对照、TTFT、成本 | 未开始 |
@@ -24,8 +25,8 @@
 |---|---|---|
 | 接入层 | 上传 / 分片 / 签名 URL / 限流 / 判定查询 | Go 1.27 |
 | 控制面 | 多租户 / 规则库 / 版本 / 快照 / 法规导入 / 审计 | Java 21 + Spring Boot 3.5 |
-| 知识面 | 文本归一化 / 变形对抗 / 条款解析 / 混合检索 / rerank | Python 3.12（M2 已交付前半） |
-| 模型面 | SFT / DPO / 蒸馏 / 评测 / vLLM·SGLang | Python 3.12（M4–M5） |
+| 知识面 | 归一化 / 变形对抗 / 条款解析 / 混合检索 / rerank / 规则判定 | Python 3.12（M2–M3 已交付） |
+| 模型面 | SFT / DPO / 蒸馏 / 评测 / vLLM·SGLang | Python（M4–M5） |
 
 ## 本地开发
 
@@ -39,12 +40,15 @@ powershell -NoProfile -ExecutionPolicy Bypass -File .\scripts\check-env.ps1
 # 3) 起中间件（Redis / MinIO / MySQL）
 powershell -ExecutionPolicy Bypass -File .\scripts\dev-up.ps1
 
-# 4) 启动两个服务（各开一个终端）
+# 4) 启动三个服务（各开一个终端）
 powershell -ExecutionPolicy Bypass -File .\scripts\run-control-plane.ps1
+# 流水线服务（M2 归一化/匹配 + M3 检索/判定）
+powershell -ExecutionPolicy Bypass -File .\scripts\run-pipeline.ps1
 powershell -ExecutionPolicy Bypass -File .\scripts\run-gateway.ps1
 
-# 5) M1 验收冒烟
-powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m1.ps1
+# 5) 验收冒烟
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m1.ps1   # 上传→判定闭环（回归）
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m3.ps1   # 条款级规则判定（M3）
 ```
 
 > 详细步骤、curl 手工链路、常见问题见 [M1 运行手册](docs/M1-运行手册.md)。
@@ -56,29 +60,33 @@ powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m1.ps1
 ```
 deploy/                 # 本地 compose（M6 替换为 ECS + RDS + OSS）
 services/
-  gateway-go/           # Go 接入层：分片上传 / 去重 / 异步判定
+  gateway-go/           # Go 接入层：分片上传 / 去重 / 异步判定（规则判定客户端）
   control-plane-java/   # Java 控制面：规则库 / 版本 / 快照 / 法规导入
-  pipeline-py/          # Python 知识面：归一化 / 变形对抗 / 条款解析 / 评测
+  pipeline-py/          # Python 知识面：归一化 / 变形对抗 / 条款解析 / 检索 / 规则判定
 scripts/                # 环境、启动、冒烟、CI
 docs/
-  adr/                  # 架构决策记录
-  api/                  # 接口契约（m1, m2）
+  adr/                  # 架构决策记录（0001–0004）
+  api/                  # 接口契约（m1/m2/m3）
 ```
 
-## M2 归一化与条款解析（快速使用）
+## M2/M3 流水线（快速使用）
 
 ```powershell
 cd services\pipeline-py
-.\.venv\Scripts\python -m pytest                            # 51 个测试
-.\.venv\Scripts\python -m adguard_pipeline.dataset          # 生成 1377 条变体评测集
-.\.venv\Scripts\python -m adguard_pipeline.evaluation       # 门禁：命中率 >= 0.95
-.\.venv\Scripts\python -m adguard_pipeline.clause_parser    # 法规 -> 条款 + 结构化规则
-.\.venv\Scripts\python -m adguard_pipeline.clause_eval      # 门禁：解析准确率 >= 0.90
+.\.venv\Scripts\python -m pytest                                    # 76 个测试用例
+.\.venv\Scripts\python -m adguard_pipeline.retrieval.evaluation --embedder bge   # M3 检索门禁
 .\.venv\Scripts\python -m uvicorn adguard_pipeline.api:app --port 8090
 ```
 
-条款级证据示例（归一化服务 `/v1/match`）：拼音、拆字、谐音、emoji 间隔、零宽字符、异体字/全半角、
-同义短语都会被识别，并返回**原文 span**（如 `evidence="最\u200b😀佳"`, `span=[2,8]`）。
+条款级证据示例（网关判定原文 → `/v1/judge`）：
+
+```json
+{"decision":"block",
+ "violations":[{"rule_id":"ADV-LAW-ART9-3","clause_id":"ADV-LAW-ART9-ITEM3",
+                "article":"第九条","item_label":"（三）","penalty_law_ref":"第五十七条",
+                "penalty_min":200000,"penalty_max":1000000,
+                "span":[0,4],"evidence":"全网最低","clause_revision":"f2954377…"}]}
+```
 
 ## 完成定义（DoD）
 

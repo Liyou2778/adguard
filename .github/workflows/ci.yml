@@ -41,9 +41,14 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - name: install
+      - name: install (CPU torch + package)
         working-directory: adguard/services/pipeline-py
-        run: pip install -e ".[dev]"
+        run: |
+          pip install torch==2.5.1 --index-url https://download.pytorch.org/whl/cpu
+          pip install -e ".[dev,retrieval]"
+      - name: download embedding model (bge-small-zh)
+        working-directory: adguard/services/pipeline-py
+        run: python -m adguard_pipeline.retrieval.embeddings --download
       - name: pytest
         working-directory: adguard/services/pipeline-py
         run: python -m pytest
@@ -57,6 +62,9 @@ jobs:
         run: |
           python -m adguard_pipeline.clause_parser
           python -m adguard_pipeline.clause_eval
+      - name: retrieval gate (material R@5 >= 0.90, NDCG@10 >= 0.75)
+        working-directory: adguard/services/pipeline-py
+        run: python -m adguard_pipeline.retrieval.evaluation --embedder bge
 
   java-control-plane:
     name: Java control plane (unit + Testcontainers IT)

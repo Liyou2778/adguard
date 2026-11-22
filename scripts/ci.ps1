@@ -45,6 +45,19 @@ if (Test-Path $Python) {
         & $Python -m adguard_pipeline.clause_parser
         & $Python -m adguard_pipeline.clause_eval
     }
+    $ModelDir = Join-Path $repo '.tmp\models\bge-small-zh-v1.5'
+    if (Test-Path (Join-Path $ModelDir 'config.json')) {
+        Run-Step 'm3 retrieval eval (gate: material R@5>=0.90, NDCG>=0.75)' {
+            Set-Location $PipelineDir
+            & $Python -m adguard_pipeline.retrieval.evaluation --embedder bge
+        }
+    } else {
+        Write-Host 'WARN: embedding model missing (.tmp\models\bge-small-zh-v1.5) - running retrieval smoke without gate' -ForegroundColor Yellow
+        Run-Step 'm3 retrieval smoke (hashing, no gate)' {
+            Set-Location $PipelineDir
+            & $Python -m adguard_pipeline.retrieval.evaluation --embedder hashing --no-enforce
+        }
+    }
 } else {
     Write-Host ''
     Write-Host 'WARN: pipeline venv missing (services/pipeline-py/.venv) - python checks skipped' -ForegroundColor Yellow

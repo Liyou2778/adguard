@@ -202,10 +202,10 @@ if ($judged) {
     $decision = if ($judgment.Json) { $judgment.Json.decision } else { '' }
     $snapshotBound = if ($judgment.Json) { $judgment.Json.rule_snapshot_id } else { '' }
     Check 'GET /judgments/{id} 200' ($judgment.Status -eq 200) "status=$($judgment.Status)"
-    Check 'decision = manual (M1 stub, ADR-2)' ($decision -eq 'manual') "decision=$decision"
+    Check 'decision is a valid three-state value (manual/block/pass)' ($decision -in @('manual','block','pass')) "decision=$decision"
     Check 'judgment bound to rule snapshot' ($snapshotBound -eq $snapshotId) "snapshot=$snapshotBound"
     Check 'violations is an empty array (not null)' ($judgment.Body -match '"violations"\s*:\s*\[\s*\]') ''
-    Check 'model_version recorded' ($judgment.Body -match '"model_version"\s*:\s*"stub') ''
+    Check 'model_version recorded' ($judgment.Body -match '"model_version"\s*:\s*"(rule-m3|stub)') ''
 }
 
 # ---------------------------------------------------------------- 4. dedupe
