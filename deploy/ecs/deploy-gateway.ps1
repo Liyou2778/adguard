@@ -28,7 +28,7 @@ function Invoke-Ssh([string]$Command) {
     if ($LASTEXITCODE -ne 0) { throw "remote command failed (exit $LASTEXITCODE): $Command" }
 }
 function Invoke-Scp([string]$Local, [string]$Remote) {
-    & scp @sshOpts $Local "$SshUser@$EcsHost:$Remote"
+    & scp @sshOpts $Local "${SshUser}@${EcsHost}:${Remote}"
     if ($LASTEXITCODE -ne 0) { throw "scp failed: $Local -> $Remote" }
 }
 function Get-RemoteHealth {
