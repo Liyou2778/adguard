@@ -1,0 +1,21 @@
+[Unit]
+Description=AdGuard Python compliance pipeline (normalization/retrieval/judge, :8090)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=adguard
+Group=adguard
+EnvironmentFile=/opt/adguard/current/config/pipeline.env
+WorkingDirectory=/opt/adguard/current/pipeline
+ExecStart=/opt/adguard/current/pipeline/venv/bin/python -m uvicorn adguard_pipeline.api:app \
+  --host 127.0.0.1 --port 8090 --workers 1
+Restart=always
+RestartSec=3
+MemoryMax=1500M
+StandardOutput=append:/opt/adguard/logs/pipeline.log
+StandardError=append:/opt/adguard/logs/pipeline.log
+
+[Install]
+WantedBy=multi-user.target

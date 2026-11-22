@@ -1,0 +1,21 @@
+[Unit]
+Description=AdGuard Java control plane (:8081)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=adguard
+Group=adguard
+EnvironmentFile=/opt/adguard/current/config/control-plane.env
+ExecStart=/usr/lib/jvm/jre-21/bin/java -Xms256m -Xmx1024m -XX:MaxMetaspaceSize=256m \
+  -jar /opt/adguard/current/control-plane.jar --spring.profiles.active=prod
+Restart=always
+RestartSec=3
+LimitNOFILE=65536
+MemoryMax=1400M
+StandardOutput=append:/opt/adguard/logs/control-plane.log
+StandardError=append:/opt/adguard/logs/control-plane.log
+
+[Install]
+WantedBy=multi-user.target

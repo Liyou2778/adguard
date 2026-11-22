@@ -1,0 +1,21 @@
+[Unit]
+Description=AdGuard Go gateway STABLE (:18080)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=adguard
+Group=adguard
+EnvironmentFile=/opt/adguard/config/gateway.env
+Environment=GATEWAY_HTTP_ADDR=:18080
+ExecStart=/opt/adguard/current/gateway
+Restart=always
+RestartSec=2
+LimitNOFILE=65536
+MemoryMax=800M
+StandardOutput=append:/opt/adguard/logs/gateway.log
+StandardError=append:/opt/adguard/logs/gateway.log
+
+[Install]
+WantedBy=multi-user.target

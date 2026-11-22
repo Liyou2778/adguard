@@ -1,0 +1,21 @@
+[Unit]
+Description=AdGuard Go gateway (public API :18080 stable / :28080 canary)
+After=network-online.target docker.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=adguard
+Group=adguard
+EnvironmentFile=/opt/adguard/current/config/gateway.env
+ExecStart=/opt/adguard/current/gateway
+Restart=always
+RestartSec=2
+LimitNOFILE=65536
+MemoryMax=800M
+CPUQuota=150%
+StandardOutput=append:/opt/adguard/logs/gateway.log
+StandardError=append:/opt/adguard/logs/gateway.log
+
+[Install]
+WantedBy=multi-user.target
