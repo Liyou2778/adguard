@@ -1,0 +1,22 @@
+{
+  "rule_id": "ADV-LAW-ART9-3",
+  "law": "中华人民共和国广告法",
+  "article": "第九条",
+  "item": "（三）",
+  "family": "absolute_terms",
+  "severity": "high",
+  "text": "不得使用“国家级”“最高级”“最佳”等用语",
+  "canonical_terms": ["最好", "最佳", "最高级", "国家级", "第一", "顶级", "唯一"],
+  "detection": {
+    "lexical": ["regex:最[好佳优低高强]", "ac_automaton:absolute_terms"],
+    "semantic": "判断该表述是否构成对商品性能的绝对化宣称",
+    "context_exemptions": ["有据可查的历史事实需附证明"]
+  },
+  "penalty": {
+    "law_ref": "第五十七条",
+    "min": 200000,
+    "max": 1000000
+  },
+  "effective_from": "2015-09-01",
+  "source_url": "https://www.gov.cn/guoqing/2015-04/25/content_2853642.htm"
+}
