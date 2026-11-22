@@ -1,0 +1,12 @@
+{
+  "version": 1,
+  "comment": "Feature reranker weights for M3 clause retrieval. Tuned on the clause-derived dev split (odd index) and evaluated on the held-out material-query set (even index). See docs/M3-检索评测.md for the tuning protocol and ablation.",
+  "weights": {
+    "bm25": 0.15,
+    "dense": 0.35,
+    "family_hits": 0.20,
+    "rule_exact": 0.10,
+    "item_level": 0.05,
+    "role_fit": 0.15
+  }
+}

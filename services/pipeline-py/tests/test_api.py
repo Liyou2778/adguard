@@ -54,3 +54,29 @@ def test_match_endpoint_clean_copy():
 def test_invalid_payload_rejected():
     assert client.post("/v1/match", json={}).status_code == 422
     assert client.post("/v1/normalize", json={"text": ""}).status_code == 422
+
+
+def test_index_status_endpoint():
+    response = client.get("/v1/index/status")
+    assert response.status_code == 200
+    body = response.json()
+    assert body["clauses"] == 33
+    assert len(body["index_version"]) == 64
+    assert body["dimensions"] > 0
+
+
+def test_retrieve_endpoint_returns_clause_with_revision():
+    response = client.post("/v1/retrieve", json={"query": "全网最低价", "top_k": 3})
+    assert response.status_code == 200
+    body = response.json()
+    assert body["hits"], body
+    top_hit = body["hits"][0]
+    assert top_hit["clause_id"].startswith("ADV-LAW-")
+    assert len(top_hit["revision"]) == 64
+    assert top_hit["article"].startswith("第")
+    assert body["dropped_stale"] == 0
+
+
+def test_retrieve_rejects_bad_topk():
+    assert client.post("/v1/retrieve", json={"query": "x", "top_k": 0}).status_code == 422
+    assert client.post("/v1/retrieve", json={"query": ""}).status_code == 422

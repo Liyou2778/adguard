@@ -4,8 +4,8 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "adguard-pipeline"
-version = "0.2.0"
-description = "AdGuard compliance pipeline: text normalization, variant matching, clause parsing (P2 / M2)"
+version = "0.3.0"
+description = "AdGuard compliance pipeline: normalization, variant matching, clause retrieval and rule judging (P2 / M2-M3)"
 requires-python = ">=3.12"
 dependencies = [
     "fastapi>=0.115",
@@ -13,10 +13,15 @@ dependencies = [
     "pydantic>=2.9",
     "pypinyin>=0.53",
     "opencc-python-reimplemented>=0.1.7",
+    "numpy>=2.0",
+    "sqlite-vec>=0.1.6",
+    "httpx>=0.27",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "httpx>=0.27"]
+# Embeddings (M3). CPU wheels: pip install torch --index-url https://download.pytorch.org/whl/cpu
+retrieval = ["torch>=2.5", "transformers>=4.46", "safetensors>=0.4"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

@@ -1,0 +1,188 @@
+{
+  "generated_at": "2026-11-22 22:49:17",
+  "embedder": "BAAI/bge-small-zh-v1.5",
+  "index": {
+    "clauses": 33,
+    "index_version": "cf6058e5623656863bb4a3e3a3fe3854386323abffd6947c0e3acb410ebe7ab8",
+    "dimensions": 512
+  },
+  "dataset": {
+    "material_queries": 55,
+    "penalty_queries": 8,
+    "generated_clause_queries": 66,
+    "dev_material": 28,
+    "test_queries": 101
+  },
+  "weights": {
+    "bm25": 0.35,
+    "dense": 0.3,
+    "family_hits": 0.2,
+    "rule_exact": 0.1,
+    "item_level": 0.05,
+    "role_fit": 0.0
+  },
+  "results": {
+    "bm25_only": {
+      "material": {
+        "queries": 27,
+        "recall@1": 0.5556,
+        "recall@3": 0.6667,
+        "recall@5": 0.6667,
+        "mrr": 0.6272,
+        "ndcg@10": 0.6629,
+        "misses": [
+          "mat-02",
+          "mat-04",
+          "mat-06",
+          "mat-08",
+          "mat-24",
+          "mat-36"
+        ]
+      },
+      "penalty": {
+        "queries": 8,
+        "recall@1": 0.25,
+        "recall@3": 0.875,
+        "recall@5": 0.875,
+        "mrr": 0.5208,
+        "ndcg@10": 0.6116,
+        "misses": [
+          "pen-06"
+        ]
+      },
+      "clause": {
+        "queries": 66,
+        "recall@1": 0.9394,
+        "recall@3": 0.9848,
+        "recall@5": 0.9848,
+        "mrr": 0.9596,
+        "ndcg@10": 0.9661,
+        "misses": [
+          "clause-ADV-LAW-ART28-ITEM5-b"
+        ]
+      }
+    },
+    "dense_only": {
+      "material": {
+        "queries": 27,
+        "recall@1": 0.1481,
+        "recall@3": 0.4074,
+        "recall@5": 0.6296,
+        "mrr": 0.3308,
+        "ndcg@10": 0.4701,
+        "misses": [
+          "mat-02",
+          "mat-08"
+        ]
+      },
+      "penalty": {
+        "queries": 8,
+        "recall@1": 0.375,
+        "recall@3": 0.875,
+        "recall@5": 0.875,
+        "mrr": 0.625,
+        "ndcg@10": 0.6905,
+        "misses": [
+          "pen-06"
+        ]
+      },
+      "clause": {
+        "queries": 66,
+        "recall@1": 0.4091,
+        "recall@3": 0.7121,
+        "recall@5": 0.8788,
+        "mrr": 0.6013,
+        "ndcg@10": 0.6948,
+        "misses": [
+          "clause-ADV-LAW-ART28-ITEM5-b"
+        ]
+      }
+    },
+    "hybrid_rrf": {
+      "material": {
+        "queries": 27,
+        "recall@1": 0.5556,
+        "recall@3": 0.7037,
+        "recall@5": 0.7407,
+        "mrr": 0.6531,
+        "ndcg@10": 0.7173,
+        "misses": [
+          "mat-02",
+          "mat-08"
+        ]
+      },
+      "penalty": {
+        "queries": 8,
+        "recall@1": 0.25,
+        "recall@3": 0.875,
+        "recall@5": 0.875,
+        "mrr": 0.5625,
+        "ndcg@10": 0.6443,
+        "misses": [
+          "pen-06"
+        ]
+      },
+      "clause": {
+        "queries": 66,
+        "recall@1": 0.9242,
+        "recall@3": 0.9848,
+        "recall@5": 0.9848,
+        "mrr": 0.9545,
+        "ndcg@10": 0.9625,
+        "misses": [
+          "clause-ADV-LAW-ART28-ITEM5-b"
+        ]
+      }
+    },
+    "hybrid_rerank": {
+      "material": {
+        "queries": 27,
+        "recall@1": 0.6667,
+        "recall@3": 0.8519,
+        "recall@5": 0.9259,
+        "mrr": 0.7608,
+        "ndcg@10": 0.81,
+        "misses": [
+          "mat-48"
+        ]
+      },
+      "penalty": {
+        "queries": 8,
+        "recall@1": 0.375,
+        "recall@3": 0.875,
+        "recall@5": 0.875,
+        "mrr": 0.6042,
+        "ndcg@10": 0.6741,
+        "misses": [
+          "pen-06"
+        ]
+      },
+      "clause": {
+        "queries": 66,
+        "recall@1": 0.9394,
+        "recall@3": 0.9848,
+        "recall@5": 0.9848,
+        "mrr": 0.9596,
+        "ndcg@10": 0.9661,
+        "misses": [
+          "clause-ADV-LAW-ART28-ITEM5-b"
+        ]
+      }
+    }
+  },
+  "gate_checks": {
+    "material recall@5 >= 0.9": true,
+    "material ndcg@10 >= 0.75": true,
+    "clause recall@5 >= 0.95": true
+  },
+  "gate_passed": true,
+  "gate_metrics": {
+    "material": {
+      "recall5": 0.9,
+      "ndcg10": 0.75
+    },
+    "clause": {
+      "recall5": 0.95
+    }
+  }
+}

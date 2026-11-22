@@ -1,66 +1,89 @@
 # AdGuard 合规流水线（Python）
 
-> P2 / M2 交付：**7 类变形归一化 + 家族词典匹配 + 变体测试集 + 条款解析器**
-> 定位：接入层（Go）只做 I/O 与编排；**文本归一化、规则匹配、模型推理在 Python 侧**（`pypinyin` / `opencc` / 后续 embedding 生态只在 Python 成熟）。
+> P2 交付：**7 类变形归一化 + 家族词典匹配（M2） + 条款级检索/rerank/规则判定（M3）**
+> 定位：接入层（Go）只做 I/O 与编排；**文本归一化、检索、判定语义在 Python 侧**（`pypinyin` / `opencc` / embedding 生态只在 Python 成熟）。
 
-## 为什么归一化要单独做成一个可评测的模块
-
-关键词库追不上变体（PRD 痛点 P-1），而"追不上"这件事必须可量化，否则无法证明改进。
-本模块把"归一化"变成一个**有输入、有输出、有指标**的纯函数管线：
-
-```
-原文 → NFKC → 剥离零宽/控制/emoji → 繁简统一 → 异体字/拆字映射 → 拼音回填 → AC 自动机粗筛
-     → 命中列表（family / canonical / variant_kind / 原文 span）
-```
-
-- 每一步都**保留原文 offset 映射**，命中可以精确回指原文位置（FR-8 条款级定位的前提）；
-- 词典是**数据文件**（`data/families/*.json`），新规只改数据不改代码（ADR-1）；
-- 变体测试集与评测脚本在同一仓库，指标可复现（PRD M2 验收：命中率 ≥0.95）。
-
-## 目录
+## 模块
 
 ```
 src/adguard_pipeline/
-  normalization.py   归一化管线 + offset 映射 + 审计轨迹
-  ahocorasick.py     纯 Python Aho-Corasick（无原生依赖，可单测）
-  dictionary.py      家族词典加载 + 变体模式生成（拼音/谐音/异体/拆字/同义）
-  matcher.py         归一化 + 多模式匹配 + 原文 span 映射
-  variants.py        变体样本生成器（7 类变形，用于评测集）
-  dataset.py         评测集生成（≥1000 条，按族均衡）
-  evaluation.py      指标计算（命中率/分族/误报）
-  clause_parser.py   法规条文 → 结构化规则 JSON（M2）
-  api.py             FastAPI：/v1/normalize /v1/match /v1/version
+  normalization.py   归一化管线 + 原文 offset 映射（M2）
+  ahocorasick.py     纯 Python AC 自动机（M2）
+  dictionary.py      家族词典加载 + 变体模式生成（M2）
+  matcher.py         归一化 + 多模式匹配 + 原文 span（M2）
+  variants.py        7 类变形样本生成器（M2）
+  dataset.py         变体评测集生成（1377 条）（M2）
+  evaluation.py      变体命中率/误报评测（M2 门禁 ≥0.95）
+  clause_parser.py   法规条文 → 条款树 + 结构化规则（M2）
+  clause_eval.py     条款解析金标评测（M2 门禁 ≥0.90）
+  api.py             FastAPI：normalize / match / retrieve / judge（M2–M3）
+  retrieval/
+    clause_source.py   条款来源：M2 JSON / Java 控制面
+    bm25.py            字符二元组 BM25（稀疏路）
+    embeddings.py      bge-small-zh-v1.5（稠密路）+ hashing fallback
+    store.py           SQLite + sqlite-vec 索引（含 revision）
+    fusion.py          RRF
+    rerank.py          可解释特征重排
+    service.py         多路召回 + rerank + revision 守卫
+    queries.py         检索评测查询集
+    evaluation.py      检索评测（Recall@K / NDCG@10 门禁）
+    rule_judge.py      规则判定：matcher + 检索 + 规则库 → block/manual/pass
 data/
-  families/          家族词典（absolute_terms 等）
-  datasets/          生成的评测集（JSONL，可复现）
-  regulations/       法规原文 fixture
-tests/               pytest
+  families/           家族词典（规则即数据）
+  normalization/      归一化字符映射（异体字/拆字）
+  regulations/        法规原文 fixture + 金标
+  parsers/            解析输出（parsed_m2.json）
+  retrieval/          检索评测查询 + 重排权重 + 指标
+  datasets/           变体评测集
+```
+
+## 安装
+
+```powershell
+cd services\pipeline-py
+python -m venv .venv
+
+# 基础依赖
+.\.venv\Scripts\python -m pip install -e ".[dev]" `
+  -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+
+# M3 向量检索依赖（CPU wheel，避免拉 CUDA 版本）
+.\.venv\Scripts\python -m pip install "torch==2.5.1" "transformers==4.46.3" "safetensors==0.4.5" `
+  -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+
+# 向量模型（约 90MB，国内网络走 HF 镜像）
+.\.venv\Scripts\python -m adguard_pipeline.retrieval.embeddings --download --endpoint https://hf-mirror.com
 ```
 
 ## 使用
 
 ```powershell
-cd services\pipeline-py
-python -m venv .venv
-.\.venv\Scripts\pip install -e ".[dev]" -i https://mirrors.aliyun.com/pypi/simple/ --trusted-host mirrors.aliyun.com
+# M2 门禁
+.\.venv\Scripts\python -m adguard_pipeline.dataset
+.\.venv\Scripts\python -m adguard_pipeline.evaluation
+.\.venv\Scripts\python -m adguard_pipeline.clause_parser
+.\.venv\Scripts\python -m adguard_pipeline.clause_eval
 
-# 生成评测集 + 跑指标（输出 Markdown 报告）
-.\.venv\Scripts\python -m adguard_pipeline.dataset --write
-.\.venv\Scripts\python -m adguard_pipeline.evaluation --report ..\..\docs\M2-变体归一化评测.md
+# M3 门禁
+.\.venv\Scripts\python -m adguard_pipeline.retrieval.evaluation --embedder bge
 
-# 起服务
-.\.venv\Scripts\python -m uvicorn adguard_pipeline.api:app --port 8090
-
-# 测试
+# 测试（76 个用例）
 .\.venv\Scripts\python -m pytest
+
+# 起服务（:8090）
+.\.venv\Scripts\python -m uvicorn adguard_pipeline.api:app --port 8090
 ```
 
-## 设计取舍（M2 已定）
+## 设计取舍
 
 | 决策 | 选择 | 理由 |
 |---|---|---|
-| 归一化位置 | Python 服务 | pypinyin/opencc 生态在 Python；Go 侧重 I/O 并发 |
-| AC 自动机 | 自研纯 Python | 无原生编译依赖（Windows 友好）、行为可单测、模式数 1000 级足够 |
-| 拼音还原 | 词典反查（模式侧生成） | 生成式还原不可靠；把"词 → 拼音形态"预生成成模式，确定性可评测 |
-| 同义/文言替换 | 家族同义词短语表 | R-2：只承诺已知变体族；未知改写交给 M4 语义模型，并在评测里单列 |
-| 繁简统一 | 逐字 t2s（保持 1:1） | 短语级转换会改变长度、破坏 offset 映射 |
+| 归一化位置 | Python 服务 | pypinyin/opencc 生态在 Python；Go 侧重 I/O |
+| AC 自动机 | 自研纯 Python | 无原生依赖、可单测、千级模式足够 |
+| 拼音还原 | 模式侧展开（不重写文本） | 生成式还原不可逆，会破坏 offset |
+| 向量存储 | SQLite + sqlite-vec | 单文件、零额外服务；接口可替换 WeKnora/ES |
+| 融合 | RRF（k=60） | 免跨路分数归一化 |
+| 重排 | 可解释特征加权 | 权重数据化可调；M5 换 cross-encoder |
+| 规则判定 | 规则族 + 条款检索 + 罚则 | 无规则/罚则不下结论（不伪造） |
+
+详见 `docs/adr/0003`（归一化/条款解析）与 `docs/adr/0004`（检索/判定/WeKnora 关系）。
