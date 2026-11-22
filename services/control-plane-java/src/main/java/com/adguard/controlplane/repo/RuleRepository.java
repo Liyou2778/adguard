@@ -31,6 +31,7 @@ public class RuleRepository {
             rs.getString("status"),
             rs.getInt("current_version"),
             nullableInt(rs.getObject("active_version")),
+            rs.getString("clause_id"),
             toLocalDateTime(rs.getTimestamp("updated_at")));
 
     private static final RowMapper<RuleVersionRow> VERSION_MAPPER = (rs, i) -> new RuleVersionRow(
@@ -68,17 +69,22 @@ public class RuleRepository {
     }
 
     public void insertRule(String tenantId, RuleDefinition def) {
+        insertRule(tenantId, def, null, null);
+    }
+
+    public void insertRule(String tenantId, RuleDefinition def, String clauseId,
+                           String sourceRegulationId) {
         Integer penaltyMin = def.penalty() == null ? null : def.penalty().min();
         Integer penaltyMax = def.penalty() == null ? null : def.penalty().max();
         jdbc.update("""
                         INSERT INTO rule (rule_id, tenant_id, law, article, item, family, severity,
                                           penalty_min, penalty_max, effective_from, effective_to,
-                                          source_url, current_version, status)
-                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'draft')
+                                          source_url, current_version, status, clause_id, source_regulation_id)
+                        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 1, 'draft', ?, ?)
                         """,
                 def.ruleId(), tenantId, def.law(), def.article(), def.item(), def.family(),
                 def.severity(), penaltyMin, penaltyMax, def.effectiveFrom(), def.effectiveTo(),
-                def.sourceUrl());
+                def.sourceUrl(), clauseId, sourceRegulationId);
     }
 
     public void insertVersion(String tenantId, String ruleId, int version, String payloadJson,

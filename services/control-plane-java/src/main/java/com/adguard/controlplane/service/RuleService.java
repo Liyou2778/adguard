@@ -120,7 +120,7 @@ public class RuleService {
     private RuleSummary toSummary(RuleRow row) {
         return new RuleSummary(row.ruleId(), row.tenantId(), row.law(), row.article(), row.item(),
                 row.family(), row.severity(), row.status(), row.currentVersion(),
-                row.activeVersion(), row.updatedAt());
+                row.activeVersion(), row.clauseId(), row.updatedAt());
     }
 
     private RuleVersionView toVersionView(RuleVersionRow row) {

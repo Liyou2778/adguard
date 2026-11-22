@@ -55,7 +55,7 @@ class AdminRuleControllerTest {
                 "absolute_terms", "high", "text", List.of("最好"), null, null,
                 LocalDate.of(2015, 9, 1), null, null);
         RuleSummary summary = new RuleSummary("ADV-LAW-ART9-3", "demo-platform", "广告法", "第九条",
-                "（三）", "absolute_terms", "high", "draft", 1, null, LocalDateTime.now());
+                "（三）", "absolute_terms", "high", "draft", 1, null, null, LocalDateTime.now());
         RuleVersionView version = new RuleVersionView(1, "draft", "api", LocalDateTime.now(), def);
         return new RuleDetail(summary, List.of(version));
     }

@@ -14,5 +14,6 @@ public record RuleSummary(
         String status,
         int currentVersion,
         Integer activeVersion,
+        String clauseId,
         LocalDateTime updatedAt) {
 }
