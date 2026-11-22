@@ -37,6 +37,8 @@ artifacts/
 *.db
 *.db-shm
 *.db-wal
+.pull-*.log
+*.log
 
 # ---- IDE / OS ----
 .idea/
