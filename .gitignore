@@ -55,3 +55,9 @@ pip-ephem-wheel-cache-*/
 pip-install-*/
 pip-unpack-*/
 pip-metadata-*/
+
+# M4 training artifacts (adapters/checkpoints stay in WSL; metrics/configs are committed)
+services/model-training/reports/experiments/*/artifacts/
+services/model-training/runs/
+services/pipeline-py/pytest-of-*/
+services/model-training/pytest-of-*/

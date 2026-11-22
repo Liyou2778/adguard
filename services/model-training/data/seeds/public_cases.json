@@ -1,0 +1,46 @@
+{
+  "version": 1,
+  "comment": "Seed phrases quoted from publicly reported administrative penalty cases (short quotations, attributed). Used to synthesise M4 training data; NOT full case texts.",
+  "cases": [
+    {
+      "id": "case-fanglinfu-2016",
+      "source": "钱江晚报/央广网 2016-03；杭州市西湖区市场监督管理局对某炒货店作出罚款20万元的处罚决定",
+      "source_url": "http://news.cnr.cn/native/gd/20160324/t20160324_521699785.shtml",
+      "violation": "广告法第九条（三）",
+      "phrases": ["最好", "最优", "最好吃"],
+      "penalty_cny": 200000
+    },
+    {
+      "id": "case-yisui-2024",
+      "source": "市场监管总局十起民生领域违法广告典型案例（2024-11）：河南一穗玉米网络科技有限公司，罚款80万元",
+      "source_url": "http://www.maoming.gov.cn/zwgk/zwzl/zdlyxxgkzl/spypaqxxgk/wfgg/content/post_1460051.html",
+      "violation": "广告法第九条（三）",
+      "phrases": ["销售第一", "全国全网"],
+      "penalty_cny": 800000
+    },
+    {
+      "id": "case-wanya-2024",
+      "source": "南通市崇川区市场监督管理局 2024-06：某课外培训中心使用“全国首家”广告语",
+      "source_url": "https://www.10jqka.com.cn",
+      "violation": "广告法第九条（三）",
+      "phrases": ["全国首家"],
+      "penalty_cny": null
+    },
+    {
+      "id": "case-shangcheng-2024",
+      "source": "杭州市上城区市场监督管理局 2024-12：网络餐饮店商品标题使用“肉丝拌川（杭城唯一正宗）”",
+      "source_url": "https://news.foodmate.net/2024/12/705736.html",
+      "violation": "广告法第九条（三）",
+      "phrases": ["杭城唯一正宗"],
+      "penalty_cny": null
+    },
+    {
+      "id": "case-samr-top10-2024",
+      "source": "市场监管总局十起民生领域违法广告典型案例（2024-11）：医疗美容、教育培训等领域使用“亚洲顶尖”“顶级机构”“最专业”等",
+      "source_url": "http://www.cnqlr.cn/focus/dianxing/17688.html",
+      "violation": "广告法第九条（三）",
+      "phrases": ["亚洲顶尖", "顶级机构", "最专业"],
+      "penalty_cny": null
+    }
+  ]
+}

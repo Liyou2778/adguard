@@ -1,0 +1,162 @@
+"""Evaluate a judge model against the M4 gates (recall / false-positive / clause hit).
+
+Works for base model, SFT adapter, DPO adapter and distilled students:
+
+    python -m adguard_training.evaluate --model-id Qwen/Qwen2.5-3B-Instruct \
+        --adapter runs/sft/artifacts/final --split eval
+
+Writes reports/experiments/<name>/metrics.json and prints a gate summary.
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import os
+from pathlib import Path
+from typing import Any
+
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+
+import torch  # noqa: E402
+from transformers import AutoModelForCausalLM, AutoTokenizer, BitsAndBytesConfig  # noqa: E402
+
+from .prompts import load_rule_catalog, user_prompt  # noqa: E402
+from .registry import finish_run, start_run  # noqa: E402
+from .schema import OutputParseError, parse_output  # noqa: E402
+
+GATES = {"recall": 0.95, "false_positive_rate": 0.03, "wrong_clause_rate": 0.0, "json_parse_rate": 0.99}
+
+
+def load_jsonl(path: Path) -> list[dict]:
+    return [json.loads(line) for line in path.read_text(encoding="utf-8").splitlines() if line.strip()]
+
+
+def load_model(model_id: str, adapter: Path | None):
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    if tokenizer.pad_token is None:
+        tokenizer.pad_token = tokenizer.eos_token
+    bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
+                             bnb_4bit_compute_dtype=torch.float16, bnb_4bit_use_double_quant=True)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id, quantization_config=bnb, device_map={"": 0}, trust_remote_code=True
+    )
+    if adapter is not None:
+        from peft import PeftModel
+
+        model = PeftModel.from_pretrained(model, str(adapter))
+    model.eval()
+    return model, tokenizer
+
+
+@torch.no_grad()
+def generate(model, tokenizer, text: str, max_new_tokens: int) -> str:
+    system = load_rule_catalog()
+    messages = [{"role": "system", "content": f"你是 AdGuard 营销素材合规初审引擎。\n\n{system}"},
+                {"role": "user", "content": user_prompt(text)}]
+    rendered = tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    inputs = tokenizer(rendered, return_tensors="pt").to(model.device)
+    output = model.generate(
+        **inputs, max_new_tokens=max_new_tokens, do_sample=False,
+        temperature=None, top_p=None, pad_token_id=tokenizer.pad_token_id,
+    )
+    generated = output[0][inputs["input_ids"].shape[1]:]
+    return tokenizer.decode(generated, skip_special_tokens=True)
+
+
+def evaluate(model_id: str, adapter: Path | None, split: str, data_dir: Path,
+             name: str, max_new_tokens: int = 320) -> dict[str, Any]:
+    rows = load_jsonl(data_dir / f"{split}.jsonl")
+    run_dir = start_run(name, {"model_id": model_id, "adapter": str(adapter or ""), "split": split,
+                               "data_dir": str(data_dir), "max_new_tokens": max_new_tokens}, data_dir)
+    model, tokenizer = load_model(model_id, adapter)
+
+    totals = {"rows": 0, "gold_block": 0, "gold_pass": 0, "parsed": 0, "invalid": 0,
+              "block_predicted": 0, "true_positive": 0, "false_positive": 0,
+              "violations_emitted": 0, "wrong_citations": 0, "exact_clause_rows": 0}
+    samples: list[dict[str, Any]] = []
+
+    for row in rows:
+        raw = generate(model, tokenizer, row["text"], max_new_tokens)
+        totals["rows"] += 1
+        if row["decision"] == "block":
+            totals["gold_block"] += 1
+        else:
+            totals["gold_pass"] += 1
+        try:
+            parsed = parse_output(raw)
+            totals["parsed"] += 1
+        except OutputParseError as exc:
+            totals["invalid"] += 1
+            samples.append({"id": row["id"], "error": str(exc), "raw": raw[:200]})
+            continue
+        if parsed.decision == "block":
+            totals["block_predicted"] += 1
+            if row["decision"] == "block":
+                totals["true_positive"] += 1
+            else:
+                totals["false_positive"] += 1
+        # Clause correctness: every emitted violation must cite the same clause set as gold.
+        if parsed.violations:
+            totals["violations_emitted"] += len(parsed.violations)
+            if row["decision"] == "block":
+                gold_clauses = {v["clause_id"] for v in row["violations"]}
+                pred_clauses = {v.clause_id for v in parsed.violations}
+                if not pred_clauses.issubset(gold_clauses):
+                    totals["wrong_citations"] += len(pred_clauses - gold_clauses)
+                else:
+                    totals["exact_clause_rows"] += 1
+            else:
+                totals["wrong_citations"] += len(parsed.violations)
+        if len(samples) < 30 and (row["decision"] == "block") != (parsed.decision == "block"):
+            samples.append({"id": row["id"], "text": row["text"], "gold": row["decision"],
+                            "pred": parsed.decision, "raw": raw[:200]})
+
+    recall = totals["true_positive"] / totals["gold_block"] if totals["gold_block"] else 0.0
+    fpr = totals["false_positive"] / totals["gold_pass"] if totals["gold_pass"] else 0.0
+    wrong_clause_rate = totals["wrong_citations"] / totals["violations_emitted"] if totals["violations_emitted"] else 0.0
+    parse_rate = totals["parsed"] / totals["rows"] if totals["rows"] else 0.0
+
+    metrics = {
+        "split": split,
+        "totals": totals,
+        "recall": round(recall, 4),
+        "false_positive_rate": round(fpr, 4),
+        "wrong_clause_rate": round(wrong_clause_rate, 4),
+        "json_parse_rate": round(parse_rate, 4),
+        "gates": GATES,
+        "gate_checks": {
+            "recall >= 0.95": recall >= GATES["recall"],
+            "false_positive_rate <= 0.03": fpr <= GATES["false_positive_rate"],
+            "wrong_clause_rate == 0": wrong_clause_rate <= GATES["wrong_clause_rate"],
+            "json_parse_rate >= 0.99": parse_rate >= GATES["json_parse_rate"],
+        },
+        "sample_errors": samples,
+    }
+    metrics["gate_passed"] = all(metrics["gate_checks"].values())
+    finish_run(run_dir, metrics, artifacts={"run_dir": str(run_dir)})
+    return metrics
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Evaluate AdGuard judge model")
+    parser.add_argument("--model-id", default="Qwen/Qwen2.5-3B-Instruct")
+    parser.add_argument("--adapter", type=Path, default=None)
+    parser.add_argument("--split", default="eval")
+    parser.add_argument("--data-dir", type=Path, required=True)
+    parser.add_argument("--name", default=None)
+    parser.add_argument("--max-new-tokens", type=int, default=320)
+    args = parser.parse_args()
+
+    name = args.name or f"eval-{args.split}-{(args.adapter.name if args.adapter else 'base')}"
+    metrics = evaluate(args.model_id, args.adapter, args.split, args.data_dir, name,
+                       args.max_new_tokens)
+    print(json.dumps({k: metrics[k] for k in
+                      ("split", "recall", "false_positive_rate", "wrong_clause_rate",
+                       "json_parse_rate", "gate_checks", "gate_passed", "totals")},
+                     ensure_ascii=False, indent=2))
+    raise SystemExit(0 if metrics["gate_passed"] else 1)
+
+
+if __name__ == "__main__":
+    main()
