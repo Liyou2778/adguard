@@ -1,0 +1,42 @@
+{
+  "version": 1,
+  "comment": "Maps parsed clauses to rule families and binds penalty/exemption sources. Rules are data (ADR-1); the parser only does segmentation + extraction.",
+  "regulations": {
+    "ADV-LAW": {
+      "title": "中华人民共和国广告法",
+      "source_url": "https://www.chengxiang.gov.cn/ztzl/scjgzf/gzhbz/202207/t20220727_1741581.htm",
+      "effective_from": "2015-09-01",
+      "file": "advertising_law_selected.txt"
+    },
+    "ADV-GUIDE-ABS": {
+      "title": "广告绝对化用语执法指南",
+      "source_url": "https://www.hongshan.gov.cn/zfbm/qgszjj/zcfg/gjzcfg/202304/t20230404_2180913.shtml",
+      "effective_from": "2023-02-25",
+      "file": "absolute_terms_guideline.txt"
+    }
+  },
+  "rules": [
+    {
+      "rule_id": "ADV-LAW-ART9-3",
+      "regulation": "ADV-LAW",
+      "article": "第九条",
+      "item": "（三）",
+      "family": "absolute_terms",
+      "severity": "high",
+      "penalty_ref": {"article": "第五十七条", "item": "（一）"},
+      "exemption_ref": {"regulation": "ADV-GUIDE-ABS", "sections": ["五", "六"]},
+      "canonical_terms_source": "quoted_and_family"
+    },
+    {
+      "rule_id": "ADV-LAW-ART28",
+      "regulation": "ADV-LAW",
+      "article": "第二十八条",
+      "item": null,
+      "family": "false_advertising",
+      "severity": "high",
+      "penalty_ref": {"article": "第五十五条", "item": null},
+      "exemption_ref": null,
+      "canonical_terms_source": "family"
+    }
+  ]
+}

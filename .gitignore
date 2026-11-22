@@ -31,9 +31,9 @@ dist/
 build/
 
 # ---- data / models / artifacts ----
-data/
-models/
-artifacts/
+/data/
+/models/
+/artifacts/
 *.db
 *.db-shm
 *.db-wal

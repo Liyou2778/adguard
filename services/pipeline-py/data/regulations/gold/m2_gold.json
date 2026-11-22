@@ -1,0 +1,35 @@
+{
+  "version": 1,
+  "comment": "Gold labels for the M2 clause parser. Transcribed by hand from the official published text of 广告法 (2018 amendment) and 广告绝对化用语执法指南 (2023 No.6). Each check below is one unit in the accuracy metric.",
+  "articles": [1, 4, 8, 9, 10, 11, 13, 28, 55, 57, 75],
+  "item_counts": {"9": 11, "28": 5, "57": 6},
+  "clause_counts": {"ADV-LAW": 11, "ADV-GUIDE-ABS": 0},
+  "ignore_clause_count_for": [],
+  "expected_rule_count": 2,
+  "rules": [
+    {
+      "rule_id": "ADV-LAW-ART9-3",
+      "family": "absolute_terms",
+      "article_no": 9,
+      "item": "（三）",
+      "quoted_terms": ["国家级", "最高级", "最佳"],
+      "penalty_min": 200000,
+      "penalty_max": 1000000,
+      "effective_from": "2015-09-01",
+      "min_exemptions": 9,
+      "text_contains": "国家级"
+    },
+    {
+      "rule_id": "ADV-LAW-ART28",
+      "family": "false_advertising",
+      "article_no": 28,
+      "item": null,
+      "quoted_terms": [],
+      "penalty_min": 200000,
+      "penalty_max": 1000000,
+      "effective_from": "2015-09-01",
+      "min_exemptions": 0,
+      "text_contains": "虚假广告"
+    }
+  ]
+}
