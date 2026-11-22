@@ -9,6 +9,7 @@ import (
 
 	"github.com/Liyou2778/adguard/services/gateway/internal/model"
 	mysqldriver "github.com/go-sql-driver/mysql"
+	"github.com/google/uuid"
 )
 
 // MySQL is the production Store implementation.
@@ -153,13 +154,39 @@ func (s *MySQL) MarkAssetDuplicate(ctx context.Context, tenantID, assetID, exist
 }
 
 func (s *MySQL) CreateJudgment(ctx context.Context, j *model.Judgment) error {
-	_, err := s.db.ExecContext(ctx, `INSERT INTO judgment
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	if _, err := tx.ExecContext(ctx, `INSERT INTO judgment
 		(id, asset_id, tenant_id, rule_snapshot_id, model_version, decision, reason, latency_ms,
 		 cost_micro, created_at)
 		VALUES (?, ?, ?, NULLIF(?,''), ?, ?, ?, ?, ?, ?)`,
 		j.ID, j.AssetID, j.TenantID, j.RuleSnapshotID, j.ModelVersion, j.Decision, j.Reason,
-		j.LatencyMS, j.CostMicro, j.CreatedAt)
-	return err
+		j.LatencyMS, j.CostMicro, j.CreatedAt); err != nil {
+		return err
+	}
+	for _, violation := range j.Violations {
+		violationID := violation.ID
+		if violationID == "" {
+			violationID = uuid.NewString()
+		}
+		if _, err := tx.ExecContext(ctx, `INSERT INTO violation
+			(id, judgment_id, rule_id, span_start, span_end, bbox, evidence_text, confidence,
+			 family, canonical, variant_kind, clause_id, regulation_id, article, item_label,
+			 clause_revision, clause_text, penalty_law_ref, penalty_min, penalty_max)
+			VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			violationID, j.ID, violation.RuleID, violation.SpanStart, violation.SpanEnd,
+			violation.EvidenceText, violation.Confidence, violation.Family, violation.Canonical,
+			violation.VariantKind, violation.ClauseID, violation.RegulationID, violation.Article,
+			violation.ItemLabel, violation.ClauseRevision, violation.ClauseText,
+			violation.PenaltyLawRef, violation.PenaltyMin, violation.PenaltyMax); err != nil {
+			return err
+		}
+	}
+	return tx.Commit()
 }
 
 func (s *MySQL) GetJudgment(ctx context.Context, tenantID, judgmentID string) (*model.Judgment, error) {
@@ -171,8 +198,7 @@ func (s *MySQL) GetJudgment(ctx context.Context, tenantID, judgmentID string) (*
 	if err != nil {
 		return nil, err
 	}
-	j.Violations = make([]model.Violation, 0)
-	return j, nil
+	return s.loadViolations(ctx, j)
 }
 
 func (s *MySQL) LatestJudgment(ctx context.Context, tenantID, assetID string) (*model.Judgment, error) {
@@ -185,8 +211,40 @@ func (s *MySQL) LatestJudgment(ctx context.Context, tenantID, assetID string) (*
 	if err != nil {
 		return nil, err
 	}
-	j.Violations = make([]model.Violation, 0)
-	return j, nil
+	return s.loadViolations(ctx, j)
+}
+
+func (s *MySQL) loadViolations(ctx context.Context, j *model.Judgment) (*model.Judgment, error) {
+	rows, err := s.db.QueryContext(ctx, `SELECT id, rule_id, COALESCE(family,''), COALESCE(canonical,''),
+		COALESCE(variant_kind,''), span_start, span_end, COALESCE(evidence_text,''), COALESCE(confidence,0),
+		COALESCE(clause_id,''), COALESCE(regulation_id,''), COALESCE(article,''), COALESCE(item_label,''),
+		COALESCE(clause_revision,''), COALESCE(clause_text,''), COALESCE(penalty_law_ref,''),
+		penalty_min, penalty_max
+		FROM violation WHERE judgment_id = ? ORDER BY id`,
+		j.ID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	violations := make([]model.Violation, 0)
+	for rows.Next() {
+		var violation model.Violation
+		var spanStart, spanEnd *int
+		var confidence float64
+		if err := rows.Scan(&violation.ID, &violation.RuleID, &violation.Family, &violation.Canonical,
+			&violation.VariantKind, &spanStart, &spanEnd, &violation.EvidenceText, &confidence,
+			&violation.ClauseID, &violation.RegulationID, &violation.Article, &violation.ItemLabel,
+			&violation.ClauseRevision, &violation.ClauseText, &violation.PenaltyLawRef,
+			&violation.PenaltyMin, &violation.PenaltyMax); err != nil {
+			return nil, err
+		}
+		violation.SpanStart = spanStart
+		violation.SpanEnd = spanEnd
+		violation.Confidence = confidence
+		violations = append(violations, violation)
+	}
+	j.Violations = violations
+	return j, rows.Err()
 }
 
 type scanner interface {

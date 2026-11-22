@@ -55,14 +55,27 @@ type Judgment struct {
 	CreatedAt      time.Time   `json:"created_at"`
 }
 
-// Violation is one clause-level finding. M1 always emits an empty list (stub judge).
+// Violation is one clause-level finding: the cited rule, the original-text span and
+// (from M3) the exact clause + penalty that the decision is based on.
 type Violation struct {
-	ID           string  `json:"violation_id,omitempty"`
-	RuleID       string  `json:"rule_id"`
-	SpanStart    *int    `json:"span_start,omitempty"`
-	SpanEnd      *int    `json:"span_end,omitempty"`
-	EvidenceText string  `json:"evidence_text,omitempty"`
-	Confidence   float64 `json:"confidence"`
+	ID             string  `json:"violation_id,omitempty"`
+	RuleID         string  `json:"rule_id"`
+	Family         string  `json:"family,omitempty"`
+	Canonical      string  `json:"canonical,omitempty"`
+	VariantKind    string  `json:"variant_kind,omitempty"`
+	SpanStart      *int    `json:"span_start,omitempty"`
+	SpanEnd        *int    `json:"span_end,omitempty"`
+	EvidenceText   string  `json:"evidence_text,omitempty"`
+	Confidence     float64 `json:"confidence"`
+	ClauseID       string  `json:"clause_id,omitempty"`
+	RegulationID   string  `json:"regulation_id,omitempty"`
+	Article        string  `json:"article,omitempty"`
+	ItemLabel      string  `json:"item_label,omitempty"`
+	ClauseRevision string  `json:"clause_revision,omitempty"`
+	ClauseText     string  `json:"clause_text,omitempty"`
+	PenaltyLawRef  string  `json:"penalty_law_ref,omitempty"`
+	PenaltyMin     *int    `json:"penalty_min,omitempty"`
+	PenaltyMax     *int    `json:"penalty_max,omitempty"`
 }
 
 // AuditTask is the queue payload that triggers the judging pipeline.

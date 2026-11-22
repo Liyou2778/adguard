@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -16,6 +17,7 @@ import (
 	"github.com/Liyou2778/adguard/services/gateway/internal/judge"
 	"github.com/Liyou2778/adguard/services/gateway/internal/metrics"
 	"github.com/Liyou2778/adguard/services/gateway/internal/objectstore"
+	"github.com/Liyou2778/adguard/services/gateway/internal/pipeline"
 	"github.com/Liyou2778/adguard/services/gateway/internal/queue"
 	"github.com/Liyou2778/adguard/services/gateway/internal/snapshot"
 	"github.com/Liyou2778/adguard/services/gateway/internal/store"
@@ -91,8 +93,19 @@ func run(logger *slog.Logger) error {
 	streams := queue.NewRedisStreams(rdb, "audit:tasks", cfg.WorkerGroup, cfg.WorkerName,
 		cfg.MaxAttempts, logger)
 	snapshots := snapshot.New(cfg.ControlPlaneURL, cfg.SnapshotTimeout)
-	stubJudge := judge.NewStub(snapshots, cfg.StubModelVersion, logger)
-	auditWorker := worker.New(st, stubJudge, cfg.MaxAttempts, m, logger)
+
+	var judging judge.Service
+	switch strings.ToLower(cfg.JudgeBackend) {
+	case "stub":
+		logger.Warn("judge backend = stub (M1 placeholder): every asset is routed to manual")
+		judging = judge.NewStub(snapshots, cfg.StubModelVersion, logger)
+	default:
+		pipelineClient := pipeline.New(cfg.PipelineURL, cfg.PipelineTimeout, logger)
+		judging = judge.NewRuleJudge(pipelineClient, objects, snapshots, logger)
+		logger.Info("judge backend = rule (M2 matcher + M3 clause retrieval)",
+			"pipeline_url", cfg.PipelineURL)
+	}
+	auditWorker := worker.New(st, judging, cfg.MaxAttempts, m, logger)
 
 	if cfg.WorkerEnabled {
 		go func() {

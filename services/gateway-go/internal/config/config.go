@@ -34,6 +34,12 @@ type Config struct {
 	ControlPlaneURL string
 	SnapshotTimeout time.Duration
 
+	// M3 judging backend: "rule" calls the Python pipeline (/v1/judge); "stub" keeps
+	// the M1 placeholder judge.
+	JudgeBackend    string
+	PipelineURL     string
+	PipelineTimeout time.Duration
+
 	APIKey          string
 	RateLimitPerMin int
 
@@ -65,6 +71,9 @@ func Load() (*Config, error) {
 		MinioUseSSL:         envBool("GATEWAY_MINIO_USE_SSL", false),
 		ControlPlaneURL:     strings.TrimRight(env("GATEWAY_CONTROL_PLANE_URL", "http://127.0.0.1:8081"), "/"),
 		SnapshotTimeout:     envDuration("GATEWAY_SNAPSHOT_TIMEOUT", 2*time.Second),
+		JudgeBackend:        env("GATEWAY_JUDGE_BACKEND", "rule"),
+		PipelineURL:         strings.TrimRight(env("GATEWAY_PIPELINE_URL", "http://127.0.0.1:8090"), "/"),
+		PipelineTimeout:     envDuration("GATEWAY_PIPELINE_TIMEOUT", 10*time.Second),
 		APIKey:              env("GATEWAY_API_KEY", ""),
 		RateLimitPerMin:     envInt("GATEWAY_RATE_LIMIT_PER_MIN", 600),
 		WorkerEnabled:       envBool("GATEWAY_WORKER_ENABLED", true),

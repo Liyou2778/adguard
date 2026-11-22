@@ -10,6 +10,7 @@ import (
 	"github.com/Liyou2778/adguard/services/gateway/internal/model"
 	"github.com/Liyou2778/adguard/services/gateway/internal/queue"
 	"github.com/Liyou2778/adguard/services/gateway/internal/store"
+	"github.com/google/uuid"
 )
 
 // Worker consumes audit tasks and writes judgments.
@@ -63,6 +64,11 @@ func (w *Worker) ProcessOne(ctx context.Context, task model.AuditTask) error {
 	if err != nil {
 		w.failOrRetry(ctx, task, err)
 		return nil
+	}
+	// Defense in depth: every judge must produce a stable judgment id (it is the
+	// primary key and the id clients query afterwards).
+	if judgment.ID == "" {
+		judgment.ID = uuid.NewString()
 	}
 	if err := w.store.CreateJudgment(ctx, judgment); err != nil {
 		w.failOrRetry(ctx, task, err)
