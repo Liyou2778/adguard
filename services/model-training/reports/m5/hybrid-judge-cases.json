@@ -1,0 +1,65 @@
+[
+  {
+    "text": "全网最低价，错过再等一年！",
+    "decision": "block",
+    "reason": "命中 1 处条款级规则违规（M3 规则判定；未使用语义模型）",
+    "judge_version": "hybrid-m5-v1",
+    "violations": [
+      {
+        "rule_id": "ADV-LAW-ART9-3",
+        "clause_id": "ADV-LAW-ART9-ITEM3",
+        "source": null,
+        "evidence": "全网最低"
+      }
+    ]
+  },
+  {
+    "text": "销量第一（有据可查的历史数据，可提供证明）",
+    "decision": "pass",
+    "reason": "免责语境经模型确认（M5 hybrid：规则提示 + 模型复核）",
+    "judge_version": "hybrid-m5-v1",
+    "violations": []
+  },
+  {
+    "text": "本店商品支持七天无理由退换。",
+    "decision": "pass",
+    "reason": "rule-matcher found no known-family violation; semantic judging is not implemented until M4；模型确认无违规",
+    "judge_version": "hybrid-m5-v1",
+    "violations": []
+  },
+  {
+    "text": "同一品牌自我比较：本代产品性能较上一代提升30%。",
+    "decision": "pass",
+    "reason": "rule-matcher found no known-family violation; semantic judging is not implemented until M4；模型确认无违规",
+    "judge_version": "hybrid-m5-v1",
+    "violations": []
+  },
+  {
+    "text": "本店商品完美，欢迎选购。",
+    "decision": "block",
+    "reason": "命中 1 处条款级规则违规（M3 规则判定；未使用语义模型）",
+    "judge_version": "hybrid-m5-v1",
+    "violations": [
+      {
+        "rule_id": "ADV-LAW-ART9-3",
+        "clause_id": "ADV-LAW-ART9-ITEM3",
+        "source": null,
+        "evidence": "完美"
+      }
+    ]
+  },
+  {
+    "text": "无人能及，天下无双！",
+    "decision": "manual",
+    "reason": "规则未命中，但模型判定违规（M5 保守策略：不自动 block，转人工确认）",
+    "judge_version": "hybrid-m5-v1",
+    "violations": [
+      {
+        "rule_id": "ADV-LAW-ART9-3",
+        "clause_id": "ADV-LAW-ART9-ITEM3",
+        "source": "model",
+        "evidence": "无人能及，天下无双"
+      }
+    ]
+  }
+]
