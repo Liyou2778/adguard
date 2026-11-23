@@ -1,0 +1,32 @@
+{
+  "mode": "served-api",
+  "base_url": "http://127.0.0.1:8100",
+  "requested_rows": 150,
+  "totals": {
+    "rows": 150,
+    "gold_block": 150,
+    "gold_pass": 0,
+    "parsed": 150,
+    "invalid": 0,
+    "block_predicted": 150,
+    "true_positive": 150,
+    "false_positive": 0,
+    "violations_emitted": 150,
+    "wrong_citations": 0,
+    "exact_clause_rows": 150
+  },
+  "transport_errors": 0,
+  "error_samples": [],
+  "recall": 1.0,
+  "false_positive_rate": 0.0,
+  "wrong_clause_rate": 0.0,
+  "json_parse_rate": 1.0,
+  "gate_checks": {
+    "recall >= 0.95": true,
+    "false_positive_rate <= 0.03": true,
+    "wrong_clause_rate == 0": true,
+    "json_parse_rate >= 0.99": true
+  },
+  "samples": [],
+  "gate_passed": true
+}

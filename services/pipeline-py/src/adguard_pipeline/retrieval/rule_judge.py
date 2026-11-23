@@ -26,6 +26,8 @@ from typing import Any
 from ..matcher import Detection, Matcher
 from ..normalization import Normalizer
 from .clause_source import DEFAULT_PARSED
+from .model_judge import (MODEL_JUDGE_VERSION, ModelJudgeClient, ModelJudgeError,
+                          load_rules_by_clause, validate_verdict)
 from .models import RetrievalHit, RetrievalResult
 from .service import RetrievalService
 
@@ -74,13 +76,23 @@ class RuleJudgment:
 class RuleJudge:
     def __init__(self, retrieval: RetrievalService, matcher: Matcher | None = None,
                  normalizer: Normalizer | None = None,
-                 parsed_rules_path: Path | None = None) -> None:
+                 parsed_rules_path: Path | None = None,
+                 model_client: ModelJudgeClient | None = None) -> None:
         self._retrieval = retrieval
         self._matcher = matcher or Matcher()
         self._normalizer = normalizer or Normalizer.from_data()
         self._rules = _load_rule_map(Path(parsed_rules_path or DEFAULT_PARSED))
+        self._model_client = model_client
+        self._rules_by_clause = load_rules_by_clause(Path(parsed_rules_path or DEFAULT_PARSED))
+        self._judge_version = MODEL_JUDGE_VERSION if model_client is not None else JUDGE_VERSION
 
     def judge(self, text: str) -> RuleJudgment:
+        base = self._judge_rules(text)
+        if self._model_client is None:
+            return base
+        return self._apply_model(text, base)
+
+    def _judge_rules(self, text: str) -> RuleJudgment:
         text = text[:200_000]
         match = self._matcher.match(text)
         if not match.detections:
@@ -150,10 +162,54 @@ class RuleJudge:
             decision=decision,
             reason=reason,
             violations=violations or [],
-            judge_version=JUDGE_VERSION,
+            judge_version=self._judge_version,
             retrieval_warnings=sorted(set(warnings or [])),
             dropped_stale=dropped,
             index_version=self._retrieval.status().index_version,
+        )
+
+    def _apply_model(self, text: str, base: RuleJudgment) -> RuleJudgment:
+        """Conservative hybrid: the model can confirm exemptions / flag semantic risk,
+        but can never auto-block a phrase the rule catalogue did not already flag."""
+        try:
+            verdict = validate_verdict(self._model_client.judge(text), self._rules_by_clause)
+        except ModelJudgeError as exc:
+            return self._result(
+                base.decision,
+                f"{base.reason}；模型判定不可用（{exc}），沿用规则结论",
+                violations=base.violations,
+                warnings=base.retrieval_warnings,
+                dropped=base.dropped_stale,
+            )
+        if base.decision == "block":
+            return base
+        if base.decision == "pass":
+            if verdict.decision == "block":
+                return self._result(
+                    "manual",
+                    "规则未命中，但模型判定违规（M5 保守策略：不自动 block，转人工确认）",
+                    violations=verdict.violations,
+                )
+            return self._result(
+                "pass", f"{base.reason}；模型确认无违规",
+                warnings=base.retrieval_warnings, dropped=base.dropped_stale,
+            )
+        if verdict.decision == "pass" and "免责语境" in base.reason:
+            return self._result(
+                "pass", "免责语境经模型确认（M5 hybrid：规则提示 + 模型复核）",
+                warnings=base.retrieval_warnings, dropped=base.dropped_stale,
+            )
+        if verdict.decision == "block":
+            return self._result(
+                "manual",
+                "规则无结构化条款依据，模型判定违规（M5 保守策略：交人工复核）",
+                violations=verdict.violations,
+                warnings=base.retrieval_warnings, dropped=base.dropped_stale,
+            )
+        return self._result(
+            "manual",
+            f"{base.reason}；模型也未能给出结构化结论",
+            warnings=base.retrieval_warnings, dropped=base.dropped_stale,
         )
 
     def _pick_clause_with_rule(self, result: RetrievalResult, family: str):

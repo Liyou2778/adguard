@@ -226,12 +226,30 @@ def rebuild_index() -> dict[str, Any]:
 _rule_judge = None
 
 
+def _model_judge_client():
+    """Optional M4 judge model served by vLLM/SGLang (M5 hybrid path).
+
+    Disabled by default; set ADGUARD_MODEL_JUDGE_URL=http://host:8100 to enable.
+    """
+    url = os.environ.get("ADGUARD_MODEL_JUDGE_URL", "").strip()
+    if not url:
+        return None
+    from .retrieval.model_judge import ModelJudgeClient
+
+    return ModelJudgeClient(
+        url,
+        model=os.environ.get("ADGUARD_MODEL_JUDGE_MODEL", "adguard-judge"),
+        timeout=float(os.environ.get("ADGUARD_MODEL_JUDGE_TIMEOUT", "8")),
+        max_tokens=int(os.environ.get("ADGUARD_MODEL_JUDGE_MAX_TOKENS", "384")),
+    )
+
+
 def get_rule_judge():
     global _rule_judge
     if _rule_judge is None:
         from .retrieval.rule_judge import RuleJudge
 
-        _rule_judge = RuleJudge(get_retrieval(), get_matcher())
+        _rule_judge = RuleJudge(get_retrieval(), get_matcher(), model_client=_model_judge_client())
     return _rule_judge
 
 

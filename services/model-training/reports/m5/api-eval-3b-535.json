@@ -1,0 +1,45 @@
+{
+  "mode": "served-api",
+  "base_url": "http://127.0.0.1:8100",
+  "requested_rows": 535,
+  "totals": {
+    "rows": 535,
+    "gold_block": 372,
+    "gold_pass": 163,
+    "parsed": 535,
+    "invalid": 0,
+    "block_predicted": 372,
+    "true_positive": 371,
+    "false_positive": 1,
+    "violations_emitted": 372,
+    "wrong_citations": 1,
+    "exact_clause_rows": 371
+  },
+  "transport_errors": 0,
+  "error_samples": [],
+  "recall": 0.9973,
+  "false_positive_rate": 0.0061,
+  "wrong_clause_rate": 0.0027,
+  "json_parse_rate": 1.0,
+  "gate_checks": {
+    "recall >= 0.95": true,
+    "false_positive_rate <= 0.03": true,
+    "wrong_clause_rate == 0": false,
+    "json_parse_rate >= 0.99": true
+  },
+  "samples": [
+    {
+      "id": "eval-00368",
+      "text": "标题：杭城唯一正宗的肉丝拌川，限时特惠。",
+      "gold": "block",
+      "pred": "pass"
+    },
+    {
+      "id": "eval-00515",
+      "text": "会员积分可兑换指定礼品，活动规则详见门店公告。（批次093）",
+      "gold": "pass",
+      "pred": "block"
+    }
+  ],
+  "gate_passed": false
+}

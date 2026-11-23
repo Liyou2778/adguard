@@ -51,6 +51,7 @@ async def one_request(client: httpx.AsyncClient, base_url: str, prompt: str,
         "max_tokens": max_tokens,
         "temperature": 0.0,
         "stream": True,
+        "stream_options": {"include_usage": True},
     }
     started = time.perf_counter()
     ttft = None
@@ -68,7 +69,13 @@ async def one_request(client: httpx.AsyncClient, base_url: str, prompt: str,
                 event = json.loads(data)
             except json.JSONDecodeError:
                 continue
-            delta = event.get("choices", [{}])[0].get("delta", {})
+            usage = event.get("usage")
+            if usage and usage.get("completion_tokens"):
+                chunks = max(chunks, int(usage["completion_tokens"]))
+            choices = event.get("choices") or []
+            if not choices:  # final usage-only chunk has an empty choices list
+                continue
+            delta = choices[0].get("delta", {})
             content = delta.get("content") or ""
             if content and ttft is None:
                 ttft = time.perf_counter() - started
@@ -106,6 +113,9 @@ async def run(args) -> dict:
     ttfts = [r["ttft_s"] for r in results]
     e2es = [r["e2e_s"] for r in results]
     total_chars = sum(r["output_chars"] for r in results)
+    decode_times = [r["e2e_s"] - r["ttft_s"] for r in results]
+    tokens = [max(1, r["events"]) for r in results]
+    tpot_ms = [d / t * 1000 for d, t in zip(decode_times, tokens)]
     metrics = {
         "engine_label": args.label,
         "concurrency": args.concurrency,
@@ -115,15 +125,15 @@ async def run(args) -> dict:
         "wall_seconds": round(elapsed, 3),
         "throughput_req_per_s": round(len(results) / elapsed, 3) if elapsed else 0.0,
         "output_chars_per_s": round(total_chars / elapsed, 1) if elapsed else 0.0,
+        "completion_tokens_total": sum(tokens),
         "ttft_p50": round(percentile(ttfts, 50), 4),
         "ttft_p95": round(percentile(ttfts, 95), 4),
         "ttft_p99": round(percentile(ttfts, 99), 4),
         "e2e_p50": round(percentile(e2es, 50), 4),
         "e2e_p95": round(percentile(e2es, 95), 4),
         "e2e_p99": round(percentile(e2es, 99), 4),
-        "tpot_p50_ms": round(
-            statistics.median([r["e2e_s"] - r["ttft_s"] for r in results]) * 1000, 1
-        ) if results else 0.0,
+        "tpot_p50_ms": round(statistics.median(tpot_ms), 1) if tpot_ms else 0.0,
+        "decode_ms_p50": round(statistics.median(decode_times) * 1000, 1) if decode_times else 0.0,
     }
     return metrics
 
