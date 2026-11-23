@@ -61,13 +61,19 @@ def main() -> None:
     )
     model = PeftModel.from_pretrained(model, str(args.sft_adapter), is_trainable=True)
 
+    eos = tokenizer.eos_token or ""
+
     def format_pairs(pairs):
         formatted = []
         for pair in pairs:
             prompt = tokenizer.apply_chat_template(
                 pair["prompt"], tokenize=False, add_generation_prompt=True
             )
-            formatted.append({"prompt": prompt, "chosen": pair["chosen"], "rejected": pair["rejected"]})
+            # append EOS explicitly: without it the model never learns to stop and later
+            # degenerates into duplicated JSON (observed in the M4 local DPO run)
+            chosen = pair["chosen"] + eos
+            rejected = pair["rejected"] + eos
+            formatted.append({"prompt": prompt, "chosen": chosen, "rejected": rejected})
         return formatted
 
     dataset = Dataset.from_list(format_pairs(load_pairs(args.data_dir / "dpo_pairs.jsonl")))

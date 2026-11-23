@@ -101,7 +101,7 @@ if [ -d "$WORKDIR/models/merged" ]; then
   bash services/model-training/scripts/run_vllm_bench.sh "$WORKDIR/models/merged" "vllm-cloud-$MODEL_SIZE"
   bash services/model-training/bench/evaluate_api.py \
     --base-url http://127.0.0.1:8100 --data-dir services/model-training/data/generated \
-    --rows 535 --concurrency 8 --max-output-tokens 384 \
+    --rows 535 --concurrency 8 --max-tokens 384 \
     --output "services/model-training/reports/m5/api-eval-$MODEL_SIZE-535.json" || true
 fi
 
