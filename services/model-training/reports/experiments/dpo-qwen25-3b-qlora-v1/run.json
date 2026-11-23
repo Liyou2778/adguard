@@ -1,0 +1,37 @@
+{
+  "name": "dpo-qwen25-3b-qlora-v1",
+  "started_at": "2026-11-23 18:40:36",
+  "config_sha256": "6d6e3e96ad5a2f71a58c0c6b00b0fb5e0957f45e79e44a8bd81e099e472df5d0",
+  "data": {
+    "version": "m4-data-v1",
+    "generated_at": "2026-11-22 22:55:09",
+    "split_protocol": {
+      "positives": "term fold sha256(term)%4 == 0 -> eval; held-out case -> case-shangcheng-2024",
+      "negatives": "withheld compliant templates + 2 held-out exemption examples",
+      "leakage_check": "zero text overlap between eval and train/val (build fails otherwise)"
+    },
+    "splits": {
+      "sft_train": {
+        "rows": 1242,
+        "sha256": "e1fb53480e2357331db00d92bc5e66e0da30a303133106d40a691245eaba6b61"
+      },
+      "sft_val": {
+        "rows": 137,
+        "sha256": "b67371d6f14a66d3f2e3e404fcf3f618effb2b7daaa44e5ad4a4db4a4a73ab73"
+      },
+      "eval": {
+        "rows": 535,
+        "sha256": "933ec65b368d780aeb54057f9517fa98e666880047d5bb397808b21f90405eb9"
+      },
+      "semantic_unknown": {
+        "rows": 32,
+        "sha256": "77f19f2421e056476fb3458a6401777a4898339d37075fedc9e7ec3b810d4105"
+      },
+      "dpo_pairs": {
+        "rows": 1242,
+        "sha256": "4715ae2171905f6d4c4d3719927dfaad3abfef64d6cb391f8ba7772ce61a7a49"
+      }
+    }
+  },
+  "notes": "M4 DPO on SFT adapter with synthetic preference pairs (chosen=gold, rejected=plausible error). M5 replaces pairs with review decisions (ADR-4)."
+}

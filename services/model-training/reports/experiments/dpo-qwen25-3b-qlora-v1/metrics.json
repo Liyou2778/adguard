@@ -1,0 +1,13 @@
+{
+  "finished_at": "2026-11-23 19:21:09",
+  "metrics": {
+    "train_loss": 0.04910159981815749,
+    "train_runtime_seconds": 2397.3016,
+    "pairs": 400,
+    "beta": 0.1,
+    "peak_vram_gb": 6.61
+  },
+  "artifacts": {
+    "adapter": "/root/adguard-train/reports/experiments/dpo-qwen25-3b-qlora-v1/artifacts/final"
+  }
+}

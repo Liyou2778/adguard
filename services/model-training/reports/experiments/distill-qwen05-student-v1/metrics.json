@@ -1,0 +1,15 @@
+{
+  "finished_at": "2026-11-23 22:00:53",
+  "metrics": {
+    "train_loss": 0.1734756572592643,
+    "train_runtime_seconds": 287.4018,
+    "train_samples": 250,
+    "val_samples": 137,
+    "epochs": 3,
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "peak_vram_gb": 4.02
+  },
+  "artifacts": {
+    "adapter": "/root/adguard-train/reports/experiments/distill-qwen05-student-v1/artifacts/final"
+  }
+}

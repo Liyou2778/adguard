@@ -1,0 +1,309 @@
+{
+  "finished_at": "2026-11-23 01:52:11",
+  "metrics": {
+    "split": "eval",
+    "totals": {
+      "rows": 535,
+      "gold_block": 372,
+      "gold_pass": 163,
+      "parsed": 529,
+      "invalid": 6,
+      "block_predicted": 393,
+      "true_positive": 346,
+      "false_positive": 47,
+      "violations_emitted": 393,
+      "wrong_citations": 56,
+      "exact_clause_rows": 337
+    },
+    "recall": 0.9301,
+    "false_positive_rate": 0.2883,
+    "wrong_clause_rate": 0.1425,
+    "json_parse_rate": 0.9888,
+    "gates": {
+      "recall": 0.95,
+      "false_positive_rate": 0.03,
+      "wrong_clause_rate": 0.0,
+      "json_parse_rate": 0.99
+    },
+    "gate_checks": {
+      "recall >= 0.95": false,
+      "false_positive_rate <= 0.03": false,
+      "wrong_clause_rate == 0": false,
+      "json_parse_rate >= 0.99": false
+    },
+    "sample_errors": [
+      {
+        "id": "eval-00009",
+        "text": "用户评价：这是首个的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00011",
+        "text": "用户评价：这是完美的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00055",
+        "text": "用户评价：这是wei yi的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00060",
+        "text": "用户评价：这是wei2 yi1的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00062",
+        "text": "用户评价：这是wei2yi1的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00070",
+        "error": "no valid JSON object in output: '{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[3,4],\"evidence\":\"shou3 ge4\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":'",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[3,4],\"evidence\":\"shou3 ge4\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":"
+      },
+      {
+        "id": "eval-00077",
+        "text": "用户评价：这是wan mei的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00082",
+        "text": "用户评价：这是wan2 mei3的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00084",
+        "text": "用户评价：这是wan2mei3的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00088",
+        "text": "用户评价：这是xiao guan的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00093",
+        "text": "用户评价：这是xiao1 guan1的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00095",
+        "text": "用户评价：这是xiao1guan1的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00121",
+        "text": "用户评价：这是yao yao ling xian的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00126",
+        "text": "用户评价：这是yao2 yao2 ling3 xian1的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00128",
+        "text": "用户评价：这是yao2yao2ling3xian1的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00149",
+        "text": "选购指南 | 唯🛒一的品质之选。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00159",
+        "text": "选购指南 | 完💰美的品质之选。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00160",
+        "error": "invalid rule_id: ''",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,6],\"evidence\":\"全场销🎉冠\"},{\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20"
+      },
+      {
+        "id": "eval-00180",
+        "error": "no valid JSON object in output: '{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,4],\"evidence\":\"最\\u200c好\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":200000'",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,4],\"evidence\":\"最‌好\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":200000"
+      },
+      {
+        "id": "eval-00227",
+        "text": "选购指南 | 完⁠美的品质之选。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00241",
+        "error": "no valid JSON object in output: '{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[1,4],\"evidence\":\"全网最\"},{\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":2000'",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[1,4],\"evidence\":\"全网最\"},{\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":2000"
+      },
+      {
+        "id": "eval-00277",
+        "error": "no valid JSON object in output: '{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,4],\"evidence\":\"为什么说这款产品手个\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\"'",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,4],\"evidence\":\"为什么说这款产品手个\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\""
+      },
+      {
+        "id": "eval-00286",
+        "text": "用户评价：这是曰取好的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00305",
+        "text": "用户评价：这是隹一一的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00310",
+        "text": "用户评价：这是完羙的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\":\"pass\",\"violations\":[]}"
+      },
+      {
+        "id": "eval-00329",
+        "error": "no valid JSON object in output: '{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,6],\"evidence\":\"史上冄低\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000'",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,6],\"evidence\":\"史上冄低\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000"
+      },
+      {
+        "id": "eval-00372",
+        "text": "方案401：本店商品质量可靠，支持七天无理由退换。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[15,26],\"evidence\":\"质量可靠\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":200"
+      },
+      {
+        "id": "eval-00373",
+        "text": "方案402：【限时促销】全场满减，仅此一天。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,5],\"evidence\":\"限时促销\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000"
+      },
+      {
+        "id": "eval-00374",
+        "text": "方案403：为什么说这款产品值得买？看完你就懂了。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,6],\"evidence\":\"为什么说这款产品值得买\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min"
+      },
+      {
+        "id": "eval-00381",
+        "text": "方案410：【限时促销】全场满减，仅此一天。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,5],\"evidence\":\"限时促销\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000"
+      },
+      {
+        "id": "eval-00382",
+        "text": "方案411：为什么说这款产品值得买？看完你就懂了。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,6],\"evidence\":\"为什么说这款产品值得买\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min"
+      },
+      {
+        "id": "eval-00388",
+        "text": "方案417：本店商品质量可靠，支持七天无理由退换。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[16,25],\"evidence\":\"质量可靠\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":200"
+      },
+      {
+        "id": "eval-00389",
+        "text": "方案418：【限时促销】全场满减，仅此一天。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,5],\"evidence\":\"限时促销\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000"
+      },
+      {
+        "id": "eval-00390",
+        "text": "方案419：为什么说这款产品值得买？看完你就懂了。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,7],\"evidence\":\"为什么说这款产品值得买\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min"
+      },
+      {
+        "id": "eval-00396",
+        "text": "方案425：本店商品质量可靠，支持七天无理由退换。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[16,27],\"evidence\":\"质量可靠\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":200"
+      },
+      {
+        "id": "eval-00397",
+        "text": "方案426：【限时促销】全场满减，仅此一天。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,5],\"evidence\":\"限时促销\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000"
+      },
+      {
+        "id": "eval-00398",
+        "text": "方案427：为什么说这款产品值得买？看完你就懂了。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,6],\"evidence\":\"为什么说这款产品值得买\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min"
+      },
+      {
+        "id": "eval-00405",
+        "text": "方案434：【限时促销】全场满减，仅此一天。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,5],\"evidence\":\"限时促销\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000"
+      },
+      {
+        "id": "eval-00406",
+        "text": "方案435：为什么说这款产品值得买？看完你就懂了。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,7],\"evidence\":\"为什么说这款产品值得买\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min"
+      },
+      {
+        "id": "eval-00413",
+        "text": "方案442：【限时促销】全场满减，仅此一天。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\":\"block\",\"violations\":[{\"rule_id\":\"ADV-LAW-ART9-3\",\"clause_id\":\"ADV-LAW-ART9-ITEM3\",\"article\":\"第九条\",\"item\":\"（三）\",\"span\":[0,5],\"evidence\":\"限时促销\",\"penalty_law_ref\":\"第五十七条\",\"penalty_min\":20000"
+      }
+    ],
+    "gate_passed": false
+  },
+  "artifacts": {
+    "run_dir": "/root/adguard-train/reports/experiments/eval-base"
+  }
+}

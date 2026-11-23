@@ -1,0 +1,90 @@
+{
+  "finished_at": "2026-11-23 22:09:22",
+  "metrics": {
+    "split": "eval",
+    "totals": {
+      "rows": 535,
+      "gold_block": 372,
+      "gold_pass": 163,
+      "parsed": 535,
+      "invalid": 0,
+      "block_predicted": 371,
+      "true_positive": 368,
+      "false_positive": 3,
+      "violations_emitted": 371,
+      "wrong_citations": 13,
+      "exact_clause_rows": 358
+    },
+    "recall": 0.9892,
+    "false_positive_rate": 0.0184,
+    "wrong_clause_rate": 0.035,
+    "json_parse_rate": 1.0,
+    "gates": {
+      "recall": 0.95,
+      "false_positive_rate": 0.03,
+      "wrong_clause_rate": 0.0,
+      "json_parse_rate": 0.99
+    },
+    "gate_checks": {
+      "recall >= 0.95": true,
+      "false_positive_rate <= 0.03": true,
+      "wrong_clause_rate == 0": false,
+      "json_parse_rate >= 0.99": true
+    },
+    "sample_errors": [
+      {
+        "id": "eval-00010",
+        "text": "本店商品完美，欢迎选购。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\": \"pass\", \"violations\": []}"
+      },
+      {
+        "id": "eval-00220",
+        "text": "本店商品完⁠美，欢迎选购。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\": \"pass\", \"violations\": []}"
+      },
+      {
+        "id": "eval-00288",
+        "text": "本店商品冣好，欢迎选购。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\": \"pass\", \"violations\": []}"
+      },
+      {
+        "id": "eval-00368",
+        "text": "标题：杭城唯一正宗的肉丝拌川，限时特惠。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\": \"pass\", \"violations\": []}"
+      },
+      {
+        "id": "eval-00531",
+        "text": "同一企业不同产品线自我比较：A系列较B系列更轻。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"自我比较\", \"penalty_law_ref\": \"第五十七条\", \""
+      },
+      {
+        "id": "eval-00532",
+        "text": "依据国家有关规定评定的“最佳创新奖”称号。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"最佳创新奖\", \"penalty_law_ref\": \"第五十七条\", "
+      },
+      {
+        "id": "eval-00533",
+        "text": "保存期限：最佳食用期为6个月。",
+        "gold": "pass",
+        "pred": "block",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"最佳食用期\", \"penalty_law_ref\": \"第五十七条\", "
+      }
+    ],
+    "gate_passed": false
+  },
+  "artifacts": {
+    "run_dir": "/root/adguard-train/reports/experiments/eval-distill"
+  }
+}

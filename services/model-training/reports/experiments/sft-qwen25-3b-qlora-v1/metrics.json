@@ -1,0 +1,15 @@
+{
+  "finished_at": "2026-11-23 01:18:44",
+  "metrics": {
+    "train_loss": 0.08616460739604888,
+    "train_runtime_seconds": 4494.125,
+    "train_samples": 1242,
+    "val_samples": 137,
+    "epochs": 2,
+    "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+    "peak_vram_gb": 4.76
+  },
+  "artifacts": {
+    "adapter": "/root/adguard-train/reports/experiments/sft-qwen25-3b-qlora-v1/artifacts/final"
+  }
+}

@@ -1,0 +1,48 @@
+{
+  "finished_at": "2026-11-23 02:10:44",
+  "metrics": {
+    "split": "eval",
+    "totals": {
+      "rows": 535,
+      "gold_block": 372,
+      "gold_pass": 163,
+      "parsed": 535,
+      "invalid": 0,
+      "block_predicted": 371,
+      "true_positive": 371,
+      "false_positive": 0,
+      "violations_emitted": 371,
+      "wrong_citations": 0,
+      "exact_clause_rows": 371
+    },
+    "recall": 0.9973,
+    "false_positive_rate": 0.0,
+    "wrong_clause_rate": 0.0,
+    "json_parse_rate": 1.0,
+    "gates": {
+      "recall": 0.95,
+      "false_positive_rate": 0.03,
+      "wrong_clause_rate": 0.0,
+      "json_parse_rate": 0.99
+    },
+    "gate_checks": {
+      "recall >= 0.95": true,
+      "false_positive_rate <= 0.03": true,
+      "wrong_clause_rate == 0": true,
+      "json_parse_rate >= 0.99": true
+    },
+    "sample_errors": [
+      {
+        "id": "eval-00011",
+        "text": "用户评价：这是完美的选择。",
+        "gold": "block",
+        "pred": "pass",
+        "raw": "{\"decision\": \"pass\", \"violations\": []}"
+      }
+    ],
+    "gate_passed": true
+  },
+  "artifacts": {
+    "run_dir": "/root/adguard-train/reports/experiments/eval-sft"
+  }
+}

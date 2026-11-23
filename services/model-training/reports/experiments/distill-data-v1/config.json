@@ -1,0 +1,7 @@
+{
+  "teacher_model": "/root/models/qwen2.5-3b-instruct",
+  "teacher_adapter": "/root/adguard-train/reports/experiments/sft-qwen25-3b-qlora-v1/artifacts/final",
+  "limit": 250,
+  "max_new_tokens": 320,
+  "batch_size": 8
+}

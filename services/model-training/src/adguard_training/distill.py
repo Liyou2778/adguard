@@ -102,6 +102,7 @@ def main() -> None:
     parser.add_argument("--out-dir", type=Path, required=True)
     parser.add_argument("--max-new-tokens", type=int, default=256)
     parser.add_argument("--limit", type=int, default=None)
+    parser.add_argument("--batch-size", type=int, default=8)
     parser.add_argument("--reports-dir", type=Path, default=Path("reports"))
     args = parser.parse_args()
 
@@ -110,9 +111,10 @@ def main() -> None:
         "teacher_adapter": str(args.teacher_adapter),
         "limit": args.limit,
         "max_new_tokens": args.max_new_tokens,
+        "batch_size": args.batch_size,
     }, args.data_dir, notes="teacher-generated SFT data for student distillation")
     generate_distill_data(args.teacher_model_id, args.teacher_adapter, args.data_dir,
-                          args.out_dir, args.max_new_tokens, args.limit)
+                          args.out_dir, args.max_new_tokens, args.limit, args.batch_size)
     finish_run(run_dir, {"rows": len(load_jsonl(args.out_dir / "sft_train.jsonl"))},
                artifacts={"out_dir": str(args.out_dir)})
     print(f"distill data written to {args.out_dir}")

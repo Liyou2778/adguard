@@ -1,0 +1,8 @@
+{
+  "model_id": "/root/models/qwen2.5-0.5b-instruct",
+  "adapter": "/root/adguard-train/reports/experiments/distill-qwen05-student-v1/artifacts/final",
+  "split": "eval",
+  "data_dir": "/root/adguard-train/data/generated",
+  "max_new_tokens": 192,
+  "batch_size": 8
+}

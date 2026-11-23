@@ -1,0 +1,241 @@
+{
+  "finished_at": "2026-11-23 19:50:59",
+  "metrics": {
+    "split": "eval",
+    "totals": {
+      "rows": 535,
+      "gold_block": 372,
+      "gold_pass": 163,
+      "parsed": 194,
+      "invalid": 341,
+      "block_predicted": 126,
+      "true_positive": 126,
+      "false_positive": 0,
+      "violations_emitted": 126,
+      "wrong_citations": 0,
+      "exact_clause_rows": 126
+    },
+    "recall": 0.3387,
+    "false_positive_rate": 0.0,
+    "wrong_clause_rate": 0.0,
+    "json_parse_rate": 0.3626,
+    "gates": {
+      "recall": 0.95,
+      "false_positive_rate": 0.03,
+      "wrong_clause_rate": 0.0,
+      "json_parse_rate": 0.99
+    },
+    "gate_checks": {
+      "recall >= 0.95": false,
+      "false_positive_rate <= 0.03": true,
+      "wrong_clause_rate == 0": true,
+      "json_parse_rate >= 0.99": false
+    },
+    "sample_errors": [
+      {
+        "id": "eval-00000",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"最好\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"最好\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00001",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"最好\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"最好\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00002",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"最先进\", \"penalty_law_ref\": \"第五十七条\", \"p'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"最先进\", \"penalty_law_ref\": \"第五十七条\", \"p"
+      },
+      {
+        "id": "eval-00003",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"最先进的\", \"penalty_law_ref\": \"第五十七条\", \"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"最先进的\", \"penalty_law_ref\": \"第五十七条\", \""
+      },
+      {
+        "id": "eval-00004",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"最科学\", \"penalty_law_ref\": \"第五十七条\", \"p'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"最科学\", \"penalty_law_ref\": \"第五十七条\", \"p"
+      },
+      {
+        "id": "eval-00005",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"最科学\", \"penalty_law_ref\": \"第五十七条\", \"p'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"最科学\", \"penalty_law_ref\": \"第五十七条\", \"p"
+      },
+      {
+        "id": "eval-00006",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"唯一\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"唯一\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00007",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"唯一的选择\", \"penalty_law_ref\": \"第五十七条\", '",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"唯一的选择\", \"penalty_law_ref\": \"第五十七条\", "
+      },
+      {
+        "id": "eval-00008",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"首个\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"首个\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00009",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"首个\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"首个\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00010",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"完美\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"完美\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00011",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"完美\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"完美\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00012",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"销冠\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"销冠\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00013",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"销冠\", \"penalty_law_ref\": \"第五十七条\", \"pe'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"销冠\", \"penalty_law_ref\": \"第五十七条\", \"pe"
+      },
+      {
+        "id": "eval-00014",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"全网最低\", \"penalty_law_ref\": \"第五十七条\", \"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"全网最低\", \"penalty_law_ref\": \"第五十七条\", \""
+      },
+      {
+        "id": "eval-00015",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"全网最低\", \"penalty_law_ref\": \"第五十七条\", '",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"全网最低\", \"penalty_law_ref\": \"第五十七条\", "
+      },
+      {
+        "id": "eval-00016",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"史上最低\", \"penalty_law_ref\": \"第五十七条\", \"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"史上最低\", \"penalty_law_ref\": \"第五十七条\", \""
+      },
+      {
+        "id": "eval-00017",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"最低的选择\", \"penalty_law_ref\": \"第五十七条\",'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"最低的选择\", \"penalty_law_ref\": \"第五十七条\","
+      },
+      {
+        "id": "eval-00018",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"遥遥领先\", \"penalty_law_ref\": \"第五十七条\", \"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 6], \"evidence\": \"遥遥领先\", \"penalty_law_ref\": \"第五十七条\", \""
+      },
+      {
+        "id": "eval-00019",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"遥遥领先\", \"penalty_law_ref\": \"第五十七条\", '",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"遥遥领先\", \"penalty_law_ref\": \"第五十七条\", "
+      },
+      {
+        "id": "eval-00020",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"zui hao\", \"penalty_law_ref\": \"第五十七条\"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"zui hao\", \"penalty_law_ref\": \"第五十七条\""
+      },
+      {
+        "id": "eval-00022",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"zui hao\", \"penalty_law_ref\": \"第五十七条'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"zui hao\", \"penalty_law_ref\": \"第五十七条"
+      },
+      {
+        "id": "eval-00027",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 13], \"evidence\": \"zui4 hao3\", \"penalty_law_ref\": \"第五十'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 13], \"evidence\": \"zui4 hao3\", \"penalty_law_ref\": \"第五十"
+      },
+      {
+        "id": "eval-00028",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 13], \"evidence\": \"zui4 hao3\", \"penalty_law_ref\": \"第五十'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 13], \"evidence\": \"zui4 hao3\", \"penalty_law_ref\": \"第五十"
+      },
+      {
+        "id": "eval-00029",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 13], \"evidence\": \"zui4hao3\", \"penalty_law_ref\": \"第五十七'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 13], \"evidence\": \"zui4hao3\", \"penalty_law_ref\": \"第五十七"
+      },
+      {
+        "id": "eval-00031",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 12], \"evidence\": \"zui xian jin\", \"penalty_law_ref\": \"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 12], \"evidence\": \"zui xian jin\", \"penalty_law_ref\": \""
+      },
+      {
+        "id": "eval-00038",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 18], \"evidence\": \"zui4 xian1 jin4\", \"penalty_law_ref\"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 18], \"evidence\": \"zui4 xian1 jin4\", \"penalty_law_ref\""
+      },
+      {
+        "id": "eval-00041",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [5, 9], \"evidence\": \"zui4xian1jin4\", \"penalty_law_ref\": \"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [5, 9], \"evidence\": \"zui4xian1jin4\", \"penalty_law_ref\": \""
+      },
+      {
+        "id": "eval-00042",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 11], \"evidence\": \"zui ke xue\", \"penalty_law_ref\": \"第五'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 11], \"evidence\": \"zui ke xue\", \"penalty_law_ref\": \"第五"
+      },
+      {
+        "id": "eval-00048",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 16], \"evidence\": \"zui4 ke1 xue2\", \"penalty_law_ref\": '",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 16], \"evidence\": \"zui4 ke1 xue2\", \"penalty_law_ref\": "
+      },
+      {
+        "id": "eval-00049",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 16], \"evidence\": \"zui4 ke1 xue2\", \"penalty_law_ref\": '",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 16], \"evidence\": \"zui4 ke1 xue2\", \"penalty_law_ref\": "
+      },
+      {
+        "id": "eval-00052",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"zui4ke1xue2\", \"penalty_law_ref\": \"第五'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"zui4ke1xue2\", \"penalty_law_ref\": \"第五"
+      },
+      {
+        "id": "eval-00053",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"wei yi\", \"penalty_law_ref\": \"第五十七条\",'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"wei yi\", \"penalty_law_ref\": \"第五十七条\","
+      },
+      {
+        "id": "eval-00054",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"wei yi\", \"penalty_law_ref\": \"第五十七条\",'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"wei yi\", \"penalty_law_ref\": \"第五十七条\","
+      },
+      {
+        "id": "eval-00055",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"wei yi\", \"penalty_law_ref\": \"第五十七条\",'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"wei yi\", \"penalty_law_ref\": \"第五十七条\","
+      },
+      {
+        "id": "eval-00060",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"wei2 yi1\", \"penalty_law_ref\": \"第五十七条'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 9], \"evidence\": \"wei2 yi1\", \"penalty_law_ref\": \"第五十七条"
+      },
+      {
+        "id": "eval-00061",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"wei2 yi1\", \"penalty_law_ref\": \"第五十七'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [7, 10], \"evidence\": \"wei2 yi1\", \"penalty_law_ref\": \"第五十七"
+      },
+      {
+        "id": "eval-00063",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"wei2yi1\", \"penalty_law_ref\": \"第五十七条\"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"wei2yi1\", \"penalty_law_ref\": \"第五十七条\""
+      },
+      {
+        "id": "eval-00064",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"shou ge\", \"penalty_law_ref\": \"第五十七条\"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"shou ge\", \"penalty_law_ref\": \"第五十七条\""
+      },
+      {
+        "id": "eval-00065",
+        "error": "no valid JSON object in output: '{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"shou ge\", \"penalty_law_ref\": \"第五十七条\"'",
+        "raw": "{\"decision\": \"block\", \"violations\": [{\"rule_id\": \"ADV-LAW-ART9-3\", \"clause_id\": \"ADV-LAW-ART9-ITEM3\", \"article\": \"第九条\", \"item\": \"（三）\", \"span\": [4, 7], \"evidence\": \"shou ge\", \"penalty_law_ref\": \"第五十七条\""
+      }
+    ],
+    "gate_passed": false
+  },
+  "artifacts": {
+    "run_dir": "/root/adguard-train/reports/experiments/eval-dpo"
+  }
+}
