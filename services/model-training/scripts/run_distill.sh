@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # M4 local distillation pipeline validation: SFT-3B teacher -> Qwen2.5-0.5B student.
 set -uo pipefail
 cd /root/adguard-train
@@ -16,10 +16,10 @@ echo "--- generate teacher labels ---"
   --teacher-adapter "$SFT_ADAPTER" \
   --data-dir /root/adguard-train/data/generated \
   --out-dir /root/adguard-train/data/distill \
-  --limit 600 || exit 1
+  --limit 400 --max-new-tokens 256 || exit 1
 
 echo "--- train student ---"
-.venv/bin/.venv/bin/python - <<'PY'
+.venv/bin/python - <<'PY'
 import json
 cfg = json.loads(open("configs/distill_qwen05_student.json").read())
 cfg["model_id"] = "/root/models/qwen2.5-0.5b-instruct"

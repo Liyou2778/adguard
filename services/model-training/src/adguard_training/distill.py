@@ -39,6 +39,7 @@ def load_jsonl(path: Path) -> list[dict]:
 
 def load_teacher(model_id: str, adapter: Path):
     tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
+    tokenizer.padding_side = "left"  # batched generation requires left padding
     if tokenizer.pad_token is None:
         tokenizer.pad_token = tokenizer.eos_token
     bnb = BitsAndBytesConfig(load_in_4bit=True, bnb_4bit_quant_type="nf4",
@@ -53,28 +54,30 @@ def load_teacher(model_id: str, adapter: Path):
 
 def generate_distill_data(teacher_model_id: str, teacher_adapter: Path,
                           data_dir: Path, out_dir: Path, max_new_tokens: int,
-                          limit: int | None = None) -> Path:
+                          limit: int | None = None, batch_size: int = 8) -> Path:
     rows = load_jsonl(data_dir / "sft_train.jsonl")
     if limit:
         rows = rows[:limit]
     out_dir.mkdir(parents=True, exist_ok=True)
     model, tokenizer = load_teacher(teacher_model_id, teacher_adapter)
     outputs: list[dict] = []
-    for index, row in enumerate(rows, start=1):
-        generated = generate_batch(model, tokenizer, [row["text"]], max_new_tokens)[0]
-        outputs.append(
-            {
-                "id": f"distill-{index:05d}",
-                "kind": row["kind"],
-                "source": "teacher-sft-3b",
-                "text": row["text"],
-                "decision": row["decision"],  # gold for stratification only
-                "violations": row["violations"],
-                "output": generated,
-            }
-        )
-        if index % 50 == 0:
-            print(f"[distill] generated {index}/{len(rows)}")
+    total = len(rows)
+    for start in range(0, total, batch_size):
+        batch = rows[start:start + batch_size]
+        generated_batch = generate_batch(model, tokenizer, [row["text"] for row in batch], max_new_tokens)
+        for offset, (row, generated) in enumerate(zip(batch, generated_batch), start=start + 1):
+            outputs.append(
+                {
+                    "id": f"distill-{offset:05d}",
+                    "kind": row["kind"],
+                    "source": "teacher-sft-3b",
+                    "text": row["text"],
+                    "decision": row["decision"],  # gold for stratification only
+                    "violations": row["violations"],
+                    "output": generated,
+                }
+            )
+        print(f"[distill] generated {min(start + batch_size, total)}/{total}", flush=True)
     payload = "\n".join(json.dumps(row, ensure_ascii=False) for row in outputs) + "\n"
     (out_dir / "sft_train.jsonl").write_text(payload, encoding="utf-8")
     shutil.copyfile(data_dir / "sft_val.jsonl", out_dir / "sft_val.jsonl")
