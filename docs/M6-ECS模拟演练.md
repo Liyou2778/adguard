@@ -29,6 +29,7 @@ curl -> nginx :8080 (WSL, 与 setup-ecs.sh 同配置)
 | 灰度 100%（300 请求） | canary 296 / stable 4（切换瞬间 in-flight） |
 | cutover | `STABLE_HEALTHY v6`，nginx 回 0% 后 **8080 连续 5 秒 200**（无 5xx） |
 | 回滚 | `ROLLBACK_OK`，current 回到 v3，**8080 200** |
+| **故障注入（坏部署包）** | 部署坏 canary（非法 gateway）→ `remote-deploy` **exit=1** 并输出 `Exec format error`；**stable 8080/18080 全程 200**，current 不变；重新部署好包后 canary 恢复 200 |
 | 反向验证（旧行为） | 若 cutover 后立刻 `systemctl stop canary` → 出现 **1 次瞬时 502**（旧 nginx worker 仍在把 in-flight 请求发给 canary） |
 
 ## 3. 演练发现并修复的真实问题
