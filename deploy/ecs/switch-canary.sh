@@ -17,8 +17,11 @@ import sys
 
 percent, path = sys.argv[1], sys.argv[2]
 
-upstreams = """upstream adguard_stable { server 127.0.0.1:18080 max_fails=3 fail_timeout=10s; }
-upstream adguard_canary { server 127.0.0.1:28080 max_fails=3 fail_timeout=10s; }"""
+upstreams = """# max_fails=0: avoid passive down-marking of a single-instance upstream after a brief restart
+upstream adguard_stable { server 127.0.0.1:18080 max_fails=0; }
+upstream adguard_canary { server 127.0.0.1:28080 max_fails=0; }
+log_format adguard '$remote_addr $http_x_tenant_id $upstream_addr $status $request_time';
+access_log /var/log/nginx/adguard-access.log adguard;"""
 
 if percent == "0":
     split = ""

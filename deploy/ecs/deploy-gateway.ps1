@@ -87,10 +87,12 @@ foreach ($percent in $CanarySteps.Split(",")) {
 
 Write-Host "[cutover] promoting canary to stable"
 Invoke-Ssh "bash /opt/adguard/scripts/remote-cutover-or-rollback.sh cutover"
-# switch nginx back to 0% FIRST, then stop the canary service (avoid a window where 100% of
-# traffic points at a dead upstream)
+# switch nginx back to 0% FIRST. The canary process is intentionally left running (idle, 0%
+# traffic): stopping it right after reload can drop in-flight requests that old nginx workers
+# still route to it (observed as a transient 502 in rehearsal). It will be recycled on the
+# next deploy; operators may stop it manually during maintenance windows.
 Invoke-Ssh "bash /opt/adguard/scripts/switch-canary.sh 0"
-Invoke-Ssh "systemctl stop adguard-gateway-canary || true"
+Start-Sleep -Seconds 2
 $code = Get-RemoteHealth
 if ($code -ne "200") { throw "post-cutover health check failed: $code" }
 Write-Host "[done] version=$Version, public healthz 200, canary traffic 0%"

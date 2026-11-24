@@ -27,6 +27,7 @@ fi
 rm -rf "$RELEASE/pipeline"
 mkdir -p "$RELEASE/pipeline"
 cp -r "$RELEASE/pipeline-src" "$RELEASE/pipeline/src"
+cp -r "$RELEASE/pipeline-data" "$RELEASE/pipeline/data"
 ln -s "$VENV" "$RELEASE/pipeline/venv"
 
 echo "[3/5] point current -> $VERSION"

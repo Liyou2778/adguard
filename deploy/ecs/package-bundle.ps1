@@ -33,6 +33,8 @@ $pipelineSrc = Join-Path $repo "services\pipeline-py\src"
 Copy-Item -Recurse $pipelineSrc (Join-Path $stage "pipeline-src")
 Copy-Item (Join-Path $repo "services\pipeline-py\pyproject.toml") (Join-Path $stage "pipeline-pyproject.toml")
 Copy-Item (Join-Path $repo "deploy\ecs\pipeline-requirements.txt") (Join-Path $stage "pipeline-requirements.txt")
+Write-Host "[package] pipeline data (parsers/fixtures)"
+Copy-Item -Recurse (Join-Path $repo "services\pipeline-py\data") (Join-Path $stage "pipeline-data")
 
 Write-Host "[package] systemd units + deploy scripts"
 Copy-Item -Recurse (Join-Path $repo "deploy\ecs") (Join-Path $stage "deploy")

@@ -8,6 +8,8 @@ Type=simple
 User=adguard
 Group=adguard
 EnvironmentFile=/opt/adguard/config/pipeline.env
+Environment=PYTHONPATH=/opt/adguard/current/pipeline/src
+Environment=PYTHONUNBUFFERED=1
 WorkingDirectory=/opt/adguard/current/pipeline
 ExecStart=/opt/adguard/current/pipeline/venv/bin/python -m uvicorn adguard_pipeline.api:app \
   --host 127.0.0.1 --port 8090 --workers 1
