@@ -1,0 +1,46 @@
+{
+  "rows": 535,
+  "rule_decisions": {
+    "block": 346,
+    "manual": 28,
+    "pass": 161
+  },
+  "hybrid_decisions": {
+    "block": 346,
+    "manual": 27,
+    "pass": 162
+  },
+  "transitions": {
+    "block->block": 346,
+    "manual->manual": 26,
+    "pass->pass": 160,
+    "pass->manual": 1,
+    "manual->pass": 2
+  },
+  "rule_block_downgraded": 0,
+  "hybrid_manual_from_rule_pass": 1,
+  "hybrid_pass_from_rule_manual": 2,
+  "model_unavailable": 0,
+  "samples": {
+    "manual_from_pass": [
+      {
+        "id": "eval-00515",
+        "text": "会员积分可兑换指定礼品，活动规则详见门店公告。（批次093）",
+        "reason": "规则未命中，但模型判定违规（M5 保守策略：不自动 block，转人工确认）"
+      }
+    ],
+    "pass_from_manual": [
+      {
+        "id": "eval-00532",
+        "text": "依据国家有关规定评定的“最佳创新奖”称号。",
+        "reason": "免责语境经模型确认（M5 hybrid：规则提示 + 模型复核）"
+      },
+      {
+        "id": "eval-00533",
+        "text": "保存期限：最佳食用期为6个月。",
+        "reason": "免责语境经模型确认（M5 hybrid：规则提示 + 模型复核）"
+      }
+    ],
+    "violations": []
+  }
+}

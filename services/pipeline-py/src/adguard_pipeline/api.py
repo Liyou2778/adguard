@@ -10,6 +10,7 @@ Run:  python -m uvicorn adguard_pipeline.api:app --port 8090
 from __future__ import annotations
 
 import os
+import threading
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
@@ -30,6 +31,7 @@ app = FastAPI(title="AdGuard pipeline", version=__version__)
 _matcher: Matcher | None = None
 _retrieval: RetrievalService | None = None
 _retrieval_store: RetrievalStore | None = None
+_init_lock = threading.Lock()
 DEFAULT_RETRIEVAL_DB = Path(__file__).resolve().parents[4] / ".tmp" / "retrieval" / "index.sqlite3"
 
 
