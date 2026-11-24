@@ -10,7 +10,7 @@ echo "[1/7] base packages"
 if command -v apt-get >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq
-  apt-get install -y -qq curl tar unzip nginx git python3 ca-certificates
+  apt-get install -y -qq curl tar unzip nginx git python3 python3-venv python3-pip ca-certificates
   apt-get install -y -qq openjdk-21-jdk-headless || apt-get install -y -qq openjdk-17-jdk-headless
 else
   dnf install -y -q curl tar unzip nginx git python3 ca-certificates >/dev/null 2>&1 || true
@@ -37,13 +37,28 @@ if ! command -v docker >/dev/null 2>&1; then
 fi
 systemctl enable --now docker >/dev/null 2>&1 || true
 
-echo "[4/7] redis container (P2 private, 127.0.0.1 only)"
+echo "[4/7] redis (docker preferred, apt/dnf fallback when Docker Hub is unreachable in CN)"
+mkdir -p "$BASE/data/redis"
 docker rm -f adguard-redis >/dev/null 2>&1 || true
-docker run -d --name adguard-redis --restart unless-stopped \
-  -p 127.0.0.1:6379:6379 \
-  -v "$BASE/data/redis":/data \
-  redis:7-alpine redis-server --appendonly yes --appendfsync everysec >/dev/null
-echo "redis started"
+if timeout 180 docker run -d --name adguard-redis --restart unless-stopped \
+    -p 127.0.0.1:6379:6379 \
+    -v "$BASE/data/redis":/data \
+    redis:7-alpine redis-server --appendonly yes --appendfsync everysec >/dev/null 2>&1; then
+  echo "redis container started"
+else
+  echo "docker redis unavailable (registry unreachable) -> installing distro redis-server"
+  if command -v apt-get >/dev/null 2>&1; then
+    apt-get install -y -qq redis-server >/dev/null
+  else
+    dnf install -y -q redis >/dev/null 2>&1 || true
+  fi
+  if [ -f /etc/redis/redis.conf ]; then
+    sed -i 's/^bind .*/bind 127.0.0.1 ::1/' /etc/redis/redis.conf
+    sed -i 's/^appendonly .*/appendonly yes/' /etc/redis/redis.conf
+  fi
+  systemctl enable --now redis-server >/dev/null 2>&1 || systemctl enable --now redis >/dev/null 2>&1 || true
+  redis-cli ping 2>/dev/null || echo "WARN: redis-cli ping failed"
+fi
 
 echo "[5/7] nginx: public 8080 -> stable (canary 0%; switch with deploy/ecs/switch-canary.sh)"
 cat > /etc/nginx/conf.d/adguard-canary.conf <<'NGINX'
