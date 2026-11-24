@@ -61,3 +61,4 @@ services/model-training/reports/experiments/*/artifacts/
 services/model-training/runs/
 services/pipeline-py/pytest-of-*/
 services/model-training/pytest-of-*/
+/pytest-of-*/
