@@ -1,0 +1,15 @@
+{
+  "finished_at": "2026-11-24 23:48:08",
+  "metrics": {
+    "train_loss": 0.15188497631780562,
+    "train_runtime_seconds": 824.4279,
+    "train_samples": 1242,
+    "val_samples": 137,
+    "epochs": 1,
+    "gpu": "NVIDIA GeForce RTX 4090",
+    "peak_vram_gb": 10.06
+  },
+  "artifacts": {
+    "adapter": "/root/autodl-tmp/adguard-m5/repo/services/model-training/reports/experiments/sft-qwen25-7b-qlora-cloud-v1/artifacts/final"
+  }
+}

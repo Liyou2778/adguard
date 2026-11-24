@@ -1,0 +1,45 @@
+{
+  "mode": "served-api",
+  "base_url": "http://127.0.0.1:8100",
+  "requested_rows": 535,
+  "totals": {
+    "rows": 535,
+    "gold_block": 372,
+    "gold_pass": 163,
+    "parsed": 535,
+    "invalid": 0,
+    "block_predicted": 374,
+    "true_positive": 372,
+    "false_positive": 2,
+    "violations_emitted": 374,
+    "wrong_citations": 3,
+    "exact_clause_rows": 371
+  },
+  "transport_errors": 0,
+  "error_samples": [],
+  "recall": 1.0,
+  "false_positive_rate": 0.0123,
+  "wrong_clause_rate": 0.008,
+  "json_parse_rate": 1.0,
+  "gate_checks": {
+    "recall >= 0.95": true,
+    "false_positive_rate <= 0.03": true,
+    "wrong_clause_rate == 0": false,
+    "json_parse_rate >= 0.99": true
+  },
+  "samples": [
+    {
+      "id": "eval-00532",
+      "text": "依据国家有关规定评定的“最佳创新奖”称号。",
+      "gold": "pass",
+      "pred": "block"
+    },
+    {
+      "id": "eval-00533",
+      "text": "保存期限：最佳食用期为6个月。",
+      "gold": "pass",
+      "pred": "block"
+    }
+  ],
+  "gate_passed": false
+}

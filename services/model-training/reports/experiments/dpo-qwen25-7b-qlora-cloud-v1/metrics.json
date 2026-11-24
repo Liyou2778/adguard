@@ -1,0 +1,13 @@
+{
+  "finished_at": "2026-11-25 00:16:33",
+  "metrics": {
+    "train_loss": 0.055805352298691574,
+    "train_runtime_seconds": 1627.0159,
+    "pairs": 1242,
+    "beta": 0.1,
+    "peak_vram_gb": 10.62
+  },
+  "artifacts": {
+    "adapter": "/root/adguard-m5/reports/experiments/dpo-qwen25-7b-qlora-cloud-v1/artifacts/final"
+  }
+}

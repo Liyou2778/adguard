@@ -1,0 +1,19 @@
+{
+  "engine_label": "vllm-7b-sft",
+  "concurrency": 1,
+  "requests": 8,
+  "errors": 0,
+  "error_samples": [],
+  "wall_seconds": 14.058,
+  "throughput_req_per_s": 0.569,
+  "output_chars_per_s": 105.6,
+  "completion_tokens_total": 787,
+  "ttft_p50": 0.045,
+  "ttft_p95": 1.0401,
+  "ttft_p99": 1.0401,
+  "e2e_p50": 2.6457,
+  "e2e_p95": 3.6051,
+  "e2e_p99": 3.6051,
+  "tpot_p50_ms": 16.2,
+  "decode_ms_p50": 1825.9
+}
