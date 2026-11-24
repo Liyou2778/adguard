@@ -82,13 +82,15 @@ foreach ($percent in $CanarySteps.Split(",")) {
     Start-Sleep -Seconds 5
     $code = Get-RemoteHealth
     if ($code -ne "200") { throw "public healthz failed ($code) at canary ${percent}%" }
-    Invoke-Ssh "curl -fsS http://127.0.0.1:8100/healthz >/dev/null 2>&1 || true" # noop guard
     Write-Host "[canary] ${percent}% -> healthz 200"
 }
 
 Write-Host "[cutover] promoting canary to stable"
 Invoke-Ssh "bash /opt/adguard/scripts/remote-cutover-or-rollback.sh cutover"
+# switch nginx back to 0% FIRST, then stop the canary service (avoid a window where 100% of
+# traffic points at a dead upstream)
 Invoke-Ssh "bash /opt/adguard/scripts/switch-canary.sh 0"
+Invoke-Ssh "systemctl stop adguard-gateway-canary || true"
 $code = Get-RemoteHealth
 if ($code -ne "200") { throw "post-cutover health check failed: $code" }
 Write-Host "[done] version=$Version, public healthz 200, canary traffic 0%"

@@ -20,7 +20,9 @@ fi
 
 echo "[2/7] directories + user"
 id -u "$RELEASE_USER" >/dev/null 2>&1 || useradd --system --shell /sbin/nologin "$RELEASE_USER"
-mkdir -p "$BASE"/{releases,current,canary,data,logs,config,scripts}
+mkdir -p "$BASE"/{releases,data,logs,config,scripts}
+# current/canary are symlinks managed by remote-deploy/remote-cutover; never pre-create as dirs
+rmdir "$BASE/current" "$BASE/canary" 2>/dev/null || true
 chown -R "$RELEASE_USER":"$RELEASE_USER" "$BASE"
 
 echo "[3/7] docker (redis only)"

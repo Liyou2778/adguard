@@ -7,10 +7,14 @@ VERSION="${2:?version required}"
 BASE=/opt/adguard
 RELEASE="$BASE/releases/$VERSION"
 
+# rm -rf: if a previous deploy failed halfway, the directory/symlink state must be replaced,
+# and ln -s onto an existing symlink-to-directory would otherwise create a nested link.
+rm -rf "$RELEASE"
 mkdir -p "$RELEASE"
 tar -xzf "$TARBALL" -C "$RELEASE"
 if [ ! -x "$RELEASE/gateway" ]; then chmod +x "$RELEASE/gateway"; fi
-ln -sfn "$RELEASE" "$BASE/canary"
+rm -f "$BASE/canary"
+ln -s "$RELEASE" "$BASE/canary"
 systemctl daemon-reload
 systemctl restart adguard-gateway-canary
 sleep 2
