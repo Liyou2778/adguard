@@ -16,10 +16,7 @@ if [ -f "$SFT_ADAPTER/adapter_config.json" ]; then
     --adapter "$SFT_ADAPTER" --output "$BASE/models/merged-sft-7b"
   echo "SFT_MERGE_EXIT=$?"
 fi
-if [ -f "$DPO_ADAPTER/adapter_config.json" ]; then
-  python -m adguard_training.merge_adapter --base "$BASE/models/qwen2.5-7b-instruct" \
-    --adapter "$DPO_ADAPTER" --output "$BASE/models/merged-dpo-7b"
-  echo "DPO_MERGE_EXIT=$?"
-fi
+# NOTE: only ONE fp16 7B merged model fits comfortably on the 50GB data disk, so the DPO
+# merge happens in stage5 after the SFT merged model has been benchmarked and removed.
 du -sh "$BASE/models"/* 2>/dev/null
 echo "STAGE4_DONE $(date)"

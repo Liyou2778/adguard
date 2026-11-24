@@ -61,7 +61,14 @@ serve_and_bench() {
 }
 
 serve_and_bench "$BASE/models/merged-sft-7b" "vllm-7b-sft"
-if [ -d "$BASE/models/merged-dpo-7b" ]; then
+
+DPO_ADAPTER=/root/adguard-m5/reports/experiments/dpo-qwen25-7b-qlora-cloud-v1/artifacts/final
+if [ -f "$DPO_ADAPTER/adapter_config.json" ]; then
+  echo "--- free SFT merged model, then merge DPO ---"
+  rm -rf "$BASE/models/merged-sft-7b"
+  PYTHONPATH="$BASE/repo/services/model-training/src" "$BASE/venv/bin/python" -m adguard_training.merge_adapter \
+    --base "$BASE/models/qwen2.5-7b-instruct" --adapter "$DPO_ADAPTER" \
+    --output "$BASE/models/merged-dpo-7b"
   serve_and_bench "$BASE/models/merged-dpo-7b" "vllm-7b-dpo"
 fi
 tar -czf "$BASE/m5-results-7b.tar.gz" -C "$BASE" reports 2>/dev/null || true
