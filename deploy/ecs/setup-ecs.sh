@@ -10,10 +10,10 @@ echo "[1/7] base packages"
 if command -v apt-get >/dev/null 2>&1; then
   export DEBIAN_FRONTEND=noninteractive
   apt-get update -qq
-  apt-get install -y -qq curl tar unzip nginx git python3 python3-venv python3-pip ca-certificates
+  apt-get install -y -qq curl tar unzip nginx git python3 python3-venv python3-pip ca-certificates ffmpeg
   apt-get install -y -qq openjdk-21-jdk-headless || apt-get install -y -qq openjdk-17-jdk-headless
 else
-  dnf install -y -q curl tar unzip nginx git python3 ca-certificates >/dev/null 2>&1 || true
+  dnf install -y -q curl tar unzip nginx git python3 ca-certificates ffmpeg >/dev/null 2>&1 || true
   dnf install -y -q java-21-openjdk-headless >/dev/null 2>&1 || \
     dnf install -y -q java-latest-openjdk-headless >/dev/null
 fi
@@ -36,6 +36,14 @@ if ! command -v docker >/dev/null 2>&1; then
   fi
 fi
 systemctl enable --now docker >/dev/null 2>&1 || true
+
+if [ "${ADGUARD_INSTALL_CLAMAV:-0}" = "1" ]; then
+  echo "installing clamav (virus scanning, optional)"
+  if command -v apt-get >/dev/null 2>&1; then apt-get install -y -qq clamav-daemon >/dev/null; else dnf install -y -q clamav clamav-update >/dev/null 2>&1 || true; fi
+  systemctl enable --now clamav-daemon >/dev/null 2>&1 || true
+  (freshclam >/tmp/freshclam.log 2>&1 &) || true
+  echo "clamav installed; ADGUARD_CLAMD_ADDR=127.0.0.1:3310 enables scanning in the pipeline"
+fi
 
 echo "[4/7] redis (docker preferred, apt/dnf fallback when Docker Hub is unreachable in CN)"
 mkdir -p "$BASE/data/redis"

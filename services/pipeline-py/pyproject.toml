@@ -16,12 +16,16 @@ dependencies = [
     "numpy>=2.0",
     "sqlite-vec>=0.1.6",
     "httpx>=0.27",
+    "python-multipart>=0.0.9",
 ]
 
 [project.optional-dependencies]
 dev = ["pytest>=8.3", "httpx>=0.27"]
 # Embeddings (M3). CPU wheels: pip install torch --index-url https://download.pytorch.org/whl/cpu
 retrieval = ["torch>=2.5", "transformers>=4.46", "safetensors>=0.4"]
+  # Multimodal parsing (M7 / FR-2): OCR + layout + landing-page extraction.
+  parsing = ["rapidocr_onnxruntime>=1.4", "opencv-python-headless>=4.9", "pillow>=10",
+             "beautifulsoup4>=4.12", "lxml>=5"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

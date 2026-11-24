@@ -15,7 +15,8 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from fastapi import FastAPI
+from fastapi import FastAPI, File, Form, UploadFile
+from fastapi.concurrency import run_in_threadpool
 from pydantic import BaseModel, Field
 
 from . import __version__
@@ -274,3 +275,69 @@ class JudgeResponse(BaseModel):
 def judge(request: JudgeRequest) -> JudgeResponse:
     judgment = get_rule_judge().judge(request.text)
     return JudgeResponse(**judgment.to_dict())
+
+
+# --------------------------------------------------------------------------- M7 parsing (FR-1/FR-2)
+class ScanOut(BaseModel):
+    status: str
+    engine: str
+    signature: str | None = None
+    warnings: list[str] = []
+
+
+class ParseResponse(BaseModel):
+    asset_type: str
+    text: str
+    degraded: bool
+    warnings: list[str] = []
+    scan: ScanOut | None = None
+    elements: list[dict[str, Any]] = []
+    lines: list[dict[str, Any]] = []
+    role_counts: dict[str, int] = {}
+    frames: int = 0
+    meta: dict[str, Any] = {}
+
+
+MAX_PARSE_BYTES = 120 * 1024 * 1024
+
+
+@app.post("/v1/scan", response_model=ScanOut)
+async def scan_upload(file: UploadFile = File(...)) -> ScanOut:
+    """Antivirus scan endpoint (EICAR always; ClamAV when ADGUARD_CLAMD_ADDR is set)."""
+    from .parsing import scan_bytes
+
+    data = await file.read()
+    result = await run_in_threadpool(scan_bytes, data, file.filename or "")
+    return ScanOut(**result.to_dict())
+
+
+@app.post("/v1/parse", response_model=ParseResponse)
+async def parse_asset(
+    asset_type: str = Form(...),
+    mime_type: str = Form(""),
+    filename: str = Form(""),
+    source_url: str = Form(""),
+    file: UploadFile | None = File(None),
+) -> ParseResponse:
+    """Multimodal parsing: text|image|video via uploaded bytes, landing_page via source_url."""
+    from .parsing import parse_bytes, parse_url, scan_bytes
+
+    kind = asset_type.lower()
+    data = b""
+    if file is not None:
+        data = await file.read()
+        if len(data) > MAX_PARSE_BYTES:
+            raise ValueError(f"asset exceeds max parse size ({MAX_PARSE_BYTES} bytes)")
+
+    def _run():
+        if kind == "landing_page":
+            parsed = parse_url(source_url)
+            return parsed
+        if not data:
+            raise ValueError("file is required for text/image/video parsing")
+        parsed = parse_bytes(kind, data, mime=mime_type, filename=filename)
+        parsed.scan = scan_bytes(data, filename)
+        return parsed
+
+    parsed = await run_in_threadpool(_run)
+    return ParseResponse(**parsed.to_dict())
