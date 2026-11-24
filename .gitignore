@@ -62,3 +62,5 @@ services/model-training/runs/
 services/pipeline-py/pytest-of-*/
 services/model-training/pytest-of-*/
 /pytest-of-*/
+# build/packaging outputs
+/dist/

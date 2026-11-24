@@ -16,6 +16,10 @@
 | `config/*.env.example` | 环境变量模板（真实值放 `/opt/adguard/config/*.env`，chmod 600） |
 | `switch-canary.sh` | 切换灰度比例 0/10/50/100 + 健康检查（0% 生成无 split_clients 配置） |
 | `install-units.sh` | 安装 4 个 systemd unit（幂等） |
+| `package-bundle.ps1` | 本机打包：linux 网关 + control-plane.jar + pipeline 源码 → dist/ecs/adguard-bundle-<ver>.tar.gz |
+| `remote-deploy-bundle.sh` | ECS 侧：解包 bundle、建 pipeline venv（hashing embedder）、切 current、重启三服务、健康检查 |
+| `deploy-all.ps1` | 本机一键：打包 → 上传 → 远程部署 → 公网 healthz 校验 |
+| `pipeline-requirements.txt` | ECS pipeline 依赖（不含 torch/BGE，见 M6 偏离记录） |
 | `remote-deploy-gateway.sh` | 服务器侧：解包新版本为 canary 并健康检查 |
 | `remote-cutover-or-rollback.sh` | 服务器侧：canary 提升为 stable / 回滚到上一版本 |
 | `deploy-gateway.ps1` | 本机编排：构建 → 上传 → canary → 灰度 → 切换 → 校验 |
@@ -31,7 +35,7 @@
    ```
 3. 安装 systemd 单元：`bash deploy/ecs/install-units.sh /opt/adguard-src/deploy/ecs`（4 个 unit，自动 enable stable/control-plane/pipeline，canary 保持禁用）。
 4. 写 `/opt/adguard/config/{gateway,control-plane,pipeline}.env`（模板见 `config/`，`chmod 600`，密钥只存在服务器）。
-5. 首次部署网关：`powershell -File deploy/ecs/deploy-gateway.ps1 -EcsHost <IP> -SshKey <pem>`
+5. 首次部署（bundle：网关+控制面+流水线）：`powershell -File deploy/ecs/deploy-all.ps1 -EcsHost <IP> -SshKey <pem>`
 6. 部署控制面/流水线：打 jar / pipeline 源码包，`scp` 到 release 目录，重启对应 unit（第一次无 canary 需求）。
 7. 冒烟：`scripts/smoke-m1.ps1 -Gateway http://<IP>:8080` 与 M3 冒烟（judge 需 pipeline/控制面在线）。
 8. 写《P2 生产部署记录》+ 截图（健康检查、灰度过程、回滚演练）。

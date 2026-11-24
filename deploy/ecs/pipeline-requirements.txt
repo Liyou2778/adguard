@@ -1,0 +1,11 @@
+# Python pipeline deployment requirements for the 2C4G ECS (no torch/BGE: uses hashing embedder).
+# BGE 需要 torch（~600MB+ 内存），在 2C4G 上会挤占 gateway/control-plane 的内存预算；
+# M6 默认 hashing embedder，偏离记录见 docs/M6-上线验收计划.md §6。
+fastapi>=0.115
+uvicorn[standard]>=0.32
+pydantic>=2.9
+pypinyin>=0.53
+opencc-python-reimplemented>=0.1.7
+numpy>=2.0
+sqlite-vec>=0.1.6
+httpx>=0.27
