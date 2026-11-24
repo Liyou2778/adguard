@@ -101,7 +101,7 @@ func run(logger *slog.Logger) error {
 		judging = judge.NewStub(snapshots, cfg.StubModelVersion, logger)
 	default:
 		pipelineClient := pipeline.New(cfg.PipelineURL, cfg.PipelineTimeout, logger)
-		judging = judge.NewRuleJudge(pipelineClient, objects, snapshots, logger)
+		judging = judge.NewRuleJudge(pipelineClient, objects, snapshots, logger, st)
 		logger.Info("judge backend = rule (M2 matcher + M3 clause retrieval)",
 			"pipeline_url", cfg.PipelineURL)
 	}

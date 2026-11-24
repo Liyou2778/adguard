@@ -20,6 +20,10 @@ var (
 // the in-memory implementation keeps HTTP tests fast and Docker-free.
 type Store interface {
 	CreateUpload(ctx context.Context, asset *model.Asset, session *model.UploadSession) error
+	// CreateAsset inserts an asset that needs no upload session (landing_page URL assets).
+	CreateAsset(ctx context.Context, asset *model.Asset) error
+	// UpdateAssetParse stores parsing evidence (OCR/layout/scan) for an asset.
+	UpdateAssetParse(ctx context.Context, tenantID, assetID, parseStatus, parseMeta string) error
 	GetUploadSessionByAsset(ctx context.Context, tenantID, assetID string) (*model.UploadSession, error)
 	AddChunk(ctx context.Context, tenantID, assetID string, index int, size int64) (int, error)
 	CountChunks(ctx context.Context, tenantID, assetID string) (int, error)

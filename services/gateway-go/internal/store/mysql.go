@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -78,6 +79,24 @@ func (s *MySQL) CreateUpload(ctx context.Context, asset *model.Asset, session *m
 	return tx.Commit()
 }
 
+func (s *MySQL) CreateAsset(ctx context.Context, asset *model.Asset) error {
+	_, err := s.db.ExecContext(ctx, `INSERT INTO asset
+		(id, tenant_id, type, status, source_url, digest, size_bytes, mime_type, filename, created_at, updated_at)
+		VALUES (?, ?, ?, ?, NULLIF(?,''), NULLIF(?,''), ?, NULLIF(?,''), NULLIF(?,''), ?, ?)`,
+		asset.ID, asset.TenantID, asset.Type, asset.Status, asset.SourceURL, asset.Digest,
+		asset.SizeBytes, asset.MimeType, asset.Filename, asset.CreatedAt, asset.UpdatedAt)
+	if isDuplicateKey(err) {
+		return ErrDuplicateDigest
+	}
+	return err
+}
+
+func (s *MySQL) UpdateAssetParse(ctx context.Context, tenantID, assetID, parseStatus, parseMeta string) error {
+	_, err := s.db.ExecContext(ctx, `UPDATE asset SET parse_status = ?, parse_meta = NULLIF(?,'')
+		WHERE tenant_id = ? AND id = ?`, parseStatus, parseMeta, tenantID, assetID)
+	return err
+}
+
 func (s *MySQL) GetUploadSessionByAsset(ctx context.Context, tenantID, assetID string) (*model.UploadSession, error) {
 	row := s.db.QueryRowContext(ctx, `SELECT id, asset_id, tenant_id, chunk_size, total_chunks,
 		received_chunks, status, created_at FROM upload_session WHERE tenant_id = ? AND asset_id = ?`,
@@ -117,6 +136,7 @@ func (s *MySQL) CompleteSession(ctx context.Context, tenantID, assetID string) e
 
 func (s *MySQL) GetAsset(ctx context.Context, tenantID, assetID string) (*model.Asset, error) {
 	row := s.db.QueryRowContext(ctx, `SELECT id, tenant_id, type, status, COALESCE(object_key,''),
+		COALESCE(source_url,''), COALESCE(parse_status,''), COALESCE(CAST(parse_meta AS CHAR),''),
 		COALESCE(digest,''), size_bytes, COALESCE(mime_type,''), COALESCE(filename,''),
 		COALESCE(deduped_from,''), created_at, updated_at
 		FROM asset WHERE tenant_id = ? AND id = ?`, tenantID, assetID)
@@ -125,6 +145,7 @@ func (s *MySQL) GetAsset(ctx context.Context, tenantID, assetID string) (*model.
 
 func (s *MySQL) FindAssetByDigest(ctx context.Context, tenantID, digest string) (*model.Asset, error) {
 	row := s.db.QueryRowContext(ctx, `SELECT id, tenant_id, type, status, COALESCE(object_key,''),
+		COALESCE(source_url,''), COALESCE(parse_status,''), COALESCE(CAST(parse_meta AS CHAR),''),
 		COALESCE(digest,''), size_bytes, COALESCE(mime_type,''), COALESCE(filename,''),
 		COALESCE(deduped_from,''), created_at, updated_at
 		FROM asset WHERE tenant_id = ? AND digest = ? LIMIT 1`, tenantID, digest)
@@ -177,9 +198,9 @@ func (s *MySQL) CreateJudgment(ctx context.Context, j *model.Judgment) error {
 			(id, judgment_id, rule_id, span_start, span_end, bbox, evidence_text, confidence,
 			 family, canonical, variant_kind, clause_id, regulation_id, article, item_label,
 			 clause_revision, clause_text, penalty_law_ref, penalty_min, penalty_max)
-			VALUES (?, ?, ?, ?, ?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+			VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 			violationID, j.ID, violation.RuleID, violation.SpanStart, violation.SpanEnd,
-			violation.EvidenceText, violation.Confidence, violation.Family, violation.Canonical,
+			bboxValue(violation.BBox), violation.EvidenceText, violation.Confidence, violation.Family, violation.Canonical,
 			violation.VariantKind, violation.ClauseID, violation.RegulationID, violation.Article,
 			violation.ItemLabel, violation.ClauseRevision, violation.ClauseText,
 			violation.PenaltyLawRef, violation.PenaltyMin, violation.PenaltyMax); err != nil {
@@ -216,7 +237,7 @@ func (s *MySQL) LatestJudgment(ctx context.Context, tenantID, assetID string) (*
 
 func (s *MySQL) loadViolations(ctx context.Context, j *model.Judgment) (*model.Judgment, error) {
 	rows, err := s.db.QueryContext(ctx, `SELECT id, rule_id, COALESCE(family,''), COALESCE(canonical,''),
-		COALESCE(variant_kind,''), span_start, span_end, COALESCE(evidence_text,''), COALESCE(confidence,0),
+		COALESCE(variant_kind,''), span_start, span_end, bbox, COALESCE(evidence_text,''), COALESCE(confidence,0),
 		COALESCE(clause_id,''), COALESCE(regulation_id,''), COALESCE(article,''), COALESCE(item_label,''),
 		COALESCE(clause_revision,''), COALESCE(clause_text,''), COALESCE(penalty_law_ref,''),
 		penalty_min, penalty_max
@@ -231,8 +252,9 @@ func (s *MySQL) loadViolations(ctx context.Context, j *model.Judgment) (*model.J
 		var violation model.Violation
 		var spanStart, spanEnd *int
 		var confidence float64
+		var bboxRaw []byte
 		if err := rows.Scan(&violation.ID, &violation.RuleID, &violation.Family, &violation.Canonical,
-			&violation.VariantKind, &spanStart, &spanEnd, &violation.EvidenceText, &confidence,
+			&violation.VariantKind, &spanStart, &spanEnd, &bboxRaw, &violation.EvidenceText, &confidence,
 			&violation.ClauseID, &violation.RegulationID, &violation.Article, &violation.ItemLabel,
 			&violation.ClauseRevision, &violation.ClauseText, &violation.PenaltyLawRef,
 			&violation.PenaltyMin, &violation.PenaltyMax); err != nil {
@@ -241,6 +263,9 @@ func (s *MySQL) loadViolations(ctx context.Context, j *model.Judgment) (*model.J
 		violation.SpanStart = spanStart
 		violation.SpanEnd = spanEnd
 		violation.Confidence = confidence
+		if len(bboxRaw) > 0 {
+			_ = json.Unmarshal(bboxRaw, &violation.BBox)
+		}
 		violations = append(violations, violation)
 	}
 	j.Violations = violations
@@ -253,7 +278,8 @@ type scanner interface {
 
 func scanAsset(row scanner) (*model.Asset, error) {
 	var a model.Asset
-	err := row.Scan(&a.ID, &a.TenantID, &a.Type, &a.Status, &a.ObjectKey, &a.Digest, &a.SizeBytes,
+	err := row.Scan(&a.ID, &a.TenantID, &a.Type, &a.Status, &a.ObjectKey, &a.SourceURL,
+		&a.ParseStatus, &a.ParseMeta, &a.Digest, &a.SizeBytes,
 		&a.MimeType, &a.Filename, &a.DedupedFrom, &a.CreatedAt, &a.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
@@ -275,6 +301,17 @@ func scanJudgment(row scanner) (*model.Judgment, error) {
 		return nil, err
 	}
 	return &j, nil
+}
+
+func bboxValue(b []float64) any {
+	if len(b) == 0 {
+		return nil
+	}
+	raw, err := json.Marshal(b)
+	if err != nil {
+		return nil
+	}
+	return string(raw)
 }
 
 func isDuplicateKey(err error) bool {

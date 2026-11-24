@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"io"
 	"log/slog"
+	"mime/multipart"
 	"net/http"
 	"strings"
 	"time"
@@ -116,4 +117,147 @@ func (c *Client) Healthy(ctx context.Context) error {
 		return fmt.Errorf("pipeline health %d", resp.StatusCode)
 	}
 	return nil
+}
+
+// --------------------------------------------------------------------------- M7 parsing
+// ScanResult mirrors the Python /v1/scan contract.
+type ScanResult struct {
+	Status    string   `json:"status"` // clean | infected | unknown
+	Engine    string   `json:"engine"`
+	Signature string   `json:"signature"`
+	Warnings  []string `json:"warnings"`
+}
+
+// ParseElement/ParseLine mirror the Python /v1/parse element contract (bbox is
+// [x0,y0,x1,y1] in original image pixels).
+type ParseElement struct {
+	Text       string    `json:"text"`
+	BBox       []float64 `json:"bbox"`
+	Confidence float64   `json:"confidence"`
+	Role       string    `json:"role"`
+	Frame      *int      `json:"frame"`
+}
+
+// ParsedAsset mirrors the Python /v1/parse response.
+type ParsedAsset struct {
+	AssetType  string         `json:"asset_type"`
+	Text       string         `json:"text"`
+	Degraded   bool           `json:"degraded"`
+	Warnings   []string       `json:"warnings"`
+	Scan       *ScanResult    `json:"scan"`
+	Elements   []ParseElement `json:"elements"`
+	Lines      []ParseElement `json:"lines"`
+	RoleCounts map[string]int `json:"role_counts"`
+	Frames     int            `json:"frames"`
+	Meta       map[string]any `json:"meta"`
+}
+
+// ParseRequest carries either uploaded bytes (text/image/video) or a landing-page URL.
+type ParseRequest struct {
+	AssetType string
+	MimeType  string
+	Filename  string
+	SourceURL string
+	Data      []byte
+}
+
+// Scan asks the pipeline to run antivirus checks on one asset.
+func (c *Client) Scan(ctx context.Context, data []byte, filename string) (*ScanResult, error) {
+	if c == nil {
+		return nil, ErrUnavailable
+	}
+	body, contentType, err := multipartPayload(nil, "file", filename, data)
+	if err != nil {
+		return nil, err
+	}
+	raw, err := c.post(ctx, "/v1/scan", contentType, body, 30*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	var out ScanResult
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("decode scan response: %w", err)
+	}
+	return &out, nil
+}
+
+// Parse asks the pipeline to parse an uploaded asset (OCR/layout/video keyframes) or a URL.
+func (c *Client) Parse(ctx context.Context, request ParseRequest) (*ParsedAsset, error) {
+	if c == nil {
+		return nil, ErrUnavailable
+	}
+	fields := map[string]string{
+		"asset_type": request.AssetType,
+		"mime_type":  request.MimeType,
+		"filename":   request.Filename,
+		"source_url": request.SourceURL,
+	}
+	var body []byte
+	var contentType string
+	var err error
+	if request.AssetType == "landing_page" {
+		body, contentType, err = multipartPayload(fields, "", "", nil)
+	} else {
+		body, contentType, err = multipartPayload(fields, "file", request.Filename, request.Data)
+	}
+	if err != nil {
+		return nil, err
+	}
+	raw, err := c.post(ctx, "/v1/parse", contentType, body, 180*time.Second)
+	if err != nil {
+		return nil, err
+	}
+	var out ParsedAsset
+	if err := json.Unmarshal(raw, &out); err != nil {
+		return nil, fmt.Errorf("decode parse response: %w", err)
+	}
+	return &out, nil
+}
+
+func (c *Client) post(ctx context.Context, path, contentType string, body []byte, timeout time.Duration) ([]byte, error) {
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+path, bytes.NewReader(body))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", contentType)
+	client := c.http
+	if timeout > c.http.Timeout {
+		client = &http.Client{Timeout: timeout}
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	defer resp.Body.Close()
+	raw, _ := io.ReadAll(io.LimitReader(resp.Body, 16<<20))
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: %s returned %d: %s", ErrUnavailable, path, resp.StatusCode, string(raw))
+	}
+	return raw, nil
+}
+
+func multipartPayload(fields map[string]string, fileField, filename string, data []byte) ([]byte, string, error) {
+	buf := &bytes.Buffer{}
+	writer := multipart.NewWriter(buf)
+	for key, value := range fields {
+		if value == "" {
+			continue
+		}
+		if err := writer.WriteField(key, value); err != nil {
+			return nil, "", fmt.Errorf("encode multipart field %s: %w", key, err)
+		}
+	}
+	if fileField != "" {
+		part, err := writer.CreateFormFile(fileField, filename)
+		if err != nil {
+			return nil, "", fmt.Errorf("encode multipart file: %w", err)
+		}
+		if _, err := part.Write(data); err != nil {
+			return nil, "", fmt.Errorf("encode multipart file body: %w", err)
+		}
+	}
+	if err := writer.Close(); err != nil {
+		return nil, "", err
+	}
+	return buf.Bytes(), writer.FormDataContentType(), nil
 }

@@ -10,6 +10,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strconv"
 	"strings"
 	"time"
@@ -33,6 +34,7 @@ type createAssetRequest struct {
 	SizeBytes int64  `json:"size_bytes"`
 	MimeType  string `json:"mime_type"`
 	Type      string `json:"type"`
+	SourceURL string `json:"source_url"` // landing_page only (M7)
 	ChunkSize int    `json:"chunk_size"`
 }
 
@@ -60,6 +62,10 @@ func (s *Server) createAsset(w http.ResponseWriter, r *http.Request) {
 	if !isAllowedAssetType(assetType) {
 		writeError(w, r, http.StatusBadRequest, "INVALID_ASSET_TYPE",
 			"type must be one of "+allowedAssetTypes, nil)
+		return
+	}
+	if assetType == "landing_page" {
+		s.createLandingPage(w, r, tenant, req)
 		return
 	}
 	if req.SizeBytes <= 0 {
@@ -129,6 +135,61 @@ func (s *Server) createAsset(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
+// createLandingPage handles URL assets (FR-1): no chunk upload; the pipeline fetches/parses the
+// page. Dedupe is by URL digest so re-submitting the same page does not create new judgments.
+func (s *Server) createLandingPage(w http.ResponseWriter, r *http.Request, tenant string, req createAssetRequest) {
+	source := strings.TrimSpace(req.SourceURL)
+	parsed, err := url.Parse(source)
+	if err != nil || (parsed.Scheme != "http" && parsed.Scheme != "https") || parsed.Host == "" {
+		writeError(w, r, http.StatusBadRequest, "INVALID_SOURCE_URL",
+			"source_url must be a valid http(s) URL for landing_page assets", nil)
+		return
+	}
+	finalURL := parsed.String()
+	sum := sha256.Sum256([]byte(finalURL))
+	digest := hex.EncodeToString(sum[:])
+
+	if existing, findErr := s.store.FindAssetByDigest(r.Context(), tenant, digest); findErr == nil {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"asset_id": existing.ID, "status": existing.Status, "deduped": true,
+		})
+		return
+	}
+	now := time.Now().UTC()
+	asset := &model.Asset{
+		ID:        uuid.NewString(),
+		TenantID:  tenant,
+		Type:      "landing_page",
+		Status:    model.AssetStatusQueued,
+		SourceURL: finalURL,
+		Digest:    digest,
+		MimeType:  "text/html",
+		Filename:  sanitiseFilename(parsed.Host),
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
+	if err := s.store.CreateAsset(r.Context(), asset); err != nil {
+		if errors.Is(err, store.ErrDuplicateDigest) {
+			if existing, findErr := s.store.FindAssetByDigest(r.Context(), tenant, digest); findErr == nil {
+				writeJSON(w, http.StatusOK, map[string]any{
+					"asset_id": existing.ID, "status": existing.Status, "deduped": true,
+				})
+				return
+			}
+		}
+		s.internalError(w, r, "create landing_page asset", err)
+		return
+	}
+	s.metrics.AssetsCreated.WithLabelValues("landing_page").Inc()
+	s.logger.Info("landing_page asset created", "tenant", tenant, "asset_id", asset.ID,
+		"url", finalURL, "request_id", requestIDFrom(r))
+	if err := s.queue.Enqueue(r.Context(), model.AuditTask{AssetID: asset.ID, TenantID: tenant}); err != nil {
+		s.logger.Error("failed to enqueue landing_page audit", "asset_id", asset.ID, "err", err)
+	}
+	writeJSON(w, http.StatusAccepted, map[string]any{
+		"asset_id": asset.ID, "status": model.AssetStatusQueued, "deduped": false,
+	})
+}
 func (s *Server) uploadChunk(w http.ResponseWriter, r *http.Request) {
 	tenant := tenantFrom(r)
 	assetID := chi.URLParam(r, "assetID")

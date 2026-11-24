@@ -54,6 +54,35 @@ func (m *Memory) CreateUpload(_ context.Context, asset *model.Asset, session *mo
 	return nil
 }
 
+func (m *Memory) CreateAsset(_ context.Context, asset *model.Asset) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	key := k(asset.TenantID, asset.ID)
+	if asset.Digest != "" {
+		digestKey := k(asset.TenantID, asset.Digest)
+		if existing, ok := m.byDigest[digestKey]; ok && existing != asset.ID {
+			return ErrDuplicateDigest
+		}
+		m.byDigest[digestKey] = asset.ID
+	}
+	copyA := *asset
+	m.assets[key] = &copyA
+	return nil
+}
+
+func (m *Memory) UpdateAssetParse(_ context.Context, tenantID, assetID, parseStatus, parseMeta string) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	a, ok := m.assets[k(tenantID, assetID)]
+	if !ok {
+		return ErrNotFound
+	}
+	a.ParseStatus = parseStatus
+	a.ParseMeta = parseMeta
+	a.UpdatedAt = time.Now()
+	return nil
+}
+
 func (m *Memory) GetUploadSessionByAsset(_ context.Context, tenantID, assetID string) (*model.UploadSession, error) {
 	m.mu.RLock()
 	defer m.mu.RUnlock()
