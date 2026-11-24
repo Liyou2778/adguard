@@ -1,0 +1,17 @@
+id=eval-00361 gold=block pred=block
+  text=【爆款推荐】虚构原价，买到就是赚到！
+  gold_clauses=['ADV-LAW-ART28']
+  pred_clauses=['ADV-LAW-ART9-ITEM3']
+  extra=['ADV-LAW-ART9-ITEM3'] missing=['ADV-LAW-ART28']
+
+id=eval-00532 gold=pass pred=block
+  text=依据国家有关规定评定的“最佳创新奖”称号。
+  gold_clauses=[]
+  pred_clauses=['ADV-LAW-ART9-ITEM3']
+  extra=['ADV-LAW-ART9-ITEM3'] missing=[]
+
+id=eval-00533 gold=pass pred=block
+  text=保存期限：最佳食用期为6个月。
+  gold_clauses=[]
+  pred_clauses=['ADV-LAW-ART9-ITEM3']
+  extra=['ADV-LAW-ART9-ITEM3'] missing=[]
