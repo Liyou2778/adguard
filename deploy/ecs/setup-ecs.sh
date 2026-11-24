@@ -87,6 +87,7 @@ server {
 NGINX
 nginx -t >/dev/null
 systemctl enable --now nginx >/dev/null 2>&1 || true
+systemctl reload nginx >/dev/null 2>&1 || systemctl restart nginx >/dev/null 2>&1 || true
 echo "nginx configured (0% canary = all traffic to stable :18080)"
 
 echo "[6/7] firewall (firewalld if active)"
