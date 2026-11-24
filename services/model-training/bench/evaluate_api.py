@@ -64,6 +64,7 @@ async def run(args) -> dict:
               "block_predicted": 0, "true_positive": 0, "false_positive": 0,
               "violations_emitted": 0, "wrong_citations": 0, "exact_clause_rows": 0}
     samples: list[dict] = []
+    dumps: list[dict] = []
     for item in results:
         row, raw = item["row"], item["raw"]
         totals["rows"] += 1
@@ -75,23 +76,39 @@ async def run(args) -> dict:
             totals["invalid"] += 1
             if len(samples) < 20:
                 samples.append({"id": row["id"], "error": str(exc), "raw": raw[:200]})
+            if args.dump_rows is not None:
+                dumps.append({"id": row["id"], "gold": row["decision"], "parse_error": str(exc)})
             continue
+        pred_clauses: set[str] = set()
+        gold_clauses: set[str] = {v["clause_id"] for v in row.get("violations", [])}
         if parsed.decision == "block":
             totals["block_predicted"] += 1
             totals["true_positive" if row["decision"] == "block" else "false_positive"] += 1
         if parsed.violations:
             totals["violations_emitted"] += len(parsed.violations)
             if row["decision"] == "block":
-                gold_clauses = {v["clause_id"] for v in row["violations"]}
                 pred_clauses = {v.clause_id for v in parsed.violations}
                 if not pred_clauses.issubset(gold_clauses):
                     totals["wrong_citations"] += len(pred_clauses - gold_clauses)
                 else:
                     totals["exact_clause_rows"] += 1
             else:
+                pred_clauses = {v.clause_id for v in parsed.violations}
                 totals["wrong_citations"] += len(parsed.violations)
         if len(samples) < 20 and (row["decision"] == "block") != (parsed.decision == "block"):
             samples.append({"id": row["id"], "text": row["text"], "gold": row["decision"], "pred": parsed.decision})
+        if args.dump_rows is not None:
+            dumps.append({
+                "id": row["id"],
+                "gold": row["decision"],
+                "pred": parsed.decision,
+                "gold_clauses": sorted(gold_clauses),
+                "pred_clauses": sorted(pred_clauses),
+                "extra_clauses": sorted(pred_clauses - gold_clauses),
+                "missing_clauses": sorted(gold_clauses - pred_clauses),
+                "text": row["text"][:120],
+                "raw": raw[:400],
+            })
 
     recall = totals["true_positive"] / totals["gold_block"] if totals["gold_block"] else 0.0
     fpr = totals["false_positive"] / totals["gold_pass"] if totals["gold_pass"] else 0.0
@@ -117,6 +134,10 @@ async def run(args) -> dict:
         "samples": samples,
     }
     metrics["gate_passed"] = all(metrics["gate_checks"].values()) and len(errors) == 0
+    if args.dump_rows is not None:
+        args.dump_rows.parent.mkdir(parents=True, exist_ok=True)
+        args.dump_rows.write_text(json.dumps(dumps, ensure_ascii=False, indent=1), encoding="utf-8")
+        metrics["dump_rows"] = str(args.dump_rows)
     return metrics
 
 
@@ -128,6 +149,8 @@ def main() -> None:
     parser.add_argument("--concurrency", type=int, default=8)
     parser.add_argument("--max-tokens", type=int, default=384)
     parser.add_argument("--output", type=Path, required=True)
+    parser.add_argument("--dump-rows", type=Path, default=None,
+                        help="optional: write per-row predictions (for wrong-citation analysis)")
     args = parser.parse_args()
     metrics = asyncio.run(run(args))
     args.output.parent.mkdir(parents=True, exist_ok=True)
