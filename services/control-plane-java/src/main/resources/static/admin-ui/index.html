@@ -1,0 +1,342 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>AdGuard 合规审核 · 管理台</title>
+<style>
+  :root { --bg:#f5f7fa; --card:#fff; --line:#e3e8ef; --text:#1f2937; --muted:#6b7280; --accent:#2563eb; --danger:#dc2626; --ok:#059669; }
+  * { box-sizing:border-box; }
+  body { margin:0; font-family:-apple-system,"Segoe UI","Microsoft YaHei",sans-serif; background:var(--bg); color:var(--text); font-size:14px; }
+  header { background:#111827; color:#fff; padding:12px 20px; display:flex; align-items:center; gap:16px; }
+  header h1 { font-size:16px; margin:0; font-weight:600; }
+  header .spacer { flex:1; }
+  header .who { color:#9ca3af; font-size:13px; }
+  button { background:var(--accent); color:#fff; border:0; padding:7px 12px; border-radius:6px; cursor:pointer; font-size:13px; }
+  button.secondary { background:#e5e7eb; color:#111827; }
+  button.danger { background:var(--danger); }
+  button:disabled { opacity:.5; cursor:not-allowed; }
+  nav { display:flex; gap:4px; padding:10px 20px 0; flex-wrap:wrap; }
+  nav button { background:transparent; color:var(--muted); border-radius:6px 6px 0 0; }
+  nav button.active { background:var(--card); color:var(--text); border:1px solid var(--line); border-bottom-color:var(--card); }
+  main { padding:0 20px 40px; }
+  section { background:var(--card); border:1px solid var(--line); border-radius:0 8px 8px 8px; padding:16px; display:none; }
+  section.active { display:block; }
+  h2 { font-size:15px; margin:0 0 12px; }
+  table { width:100%; border-collapse:collapse; }
+  th, td { text-align:left; padding:8px 10px; border-bottom:1px solid var(--line); vertical-align:top; }
+  th { color:var(--muted); font-weight:500; font-size:12px; background:#fafbfc; }
+  tr.clickable { cursor:pointer; }
+  tr.clickable:hover { background:#f0f6ff; }
+  .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; margin-bottom:12px; }
+  input, select, textarea { padding:7px 9px; border:1px solid var(--line); border-radius:6px; font-size:13px; font-family:inherit; }
+  textarea { width:100%; min-height:70px; }
+  .muted { color:var(--muted); }
+  .pill { display:inline-block; padding:1px 8px; border-radius:999px; font-size:12px; background:#eef2ff; color:#3730a3; }
+  .pill.block { background:#fee2e2; color:#991b1b; }
+  .pill.manual { background:#fef3c7; color:#92400e; }
+  .pill.pass { background:#d1fae5; color:#065f46; }
+  .card { border:1px solid var(--line); border-radius:8px; padding:14px; margin-bottom:12px; }
+  #login { max-width:360px; margin:10vh auto; background:var(--card); padding:24px; border-radius:10px; border:1px solid var(--line); }
+  #login h2 { margin-bottom:16px; }
+  #login input { width:100%; margin-bottom:10px; }
+  #msg { position:fixed; right:16px; bottom:16px; padding:10px 14px; border-radius:8px; color:#fff; display:none; z-index:99; }
+  .grid2 { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  @media (max-width:900px){ .grid2 { grid-template-columns:1fr; } }
+  pre { background:#0f172a; color:#e2e8f0; padding:10px; border-radius:6px; overflow:auto; max-height:180px; font-size:12px; }
+  .kb { font-family:ui-monospace,Consolas,monospace; font-size:12px; }
+</style>
+</head>
+<body>
+<div id="login">
+  <h2>AdGuard 管理台登录</h2>
+  <input id="loginUser" placeholder="用户名" autocomplete="username">
+  <input id="loginPass" type="password" placeholder="密码" autocomplete="current-password">
+  <button id="loginBtn" style="width:100%">登录</button>
+  <p class="muted" style="font-size:12px">商户申诉请使用租户账号登录；平台复核/管理员使用平台账号。</p>
+</div>
+
+<div id="app" style="display:none">
+  <header>
+    <h1>AdGuard 合规审核 · 管理台</h1>
+    <span class="spacer"></span>
+    <span class="who" id="who"></span>
+    <button class="secondary" id="logoutBtn">退出</button>
+  </header>
+  <nav id="nav">
+    <button data-tab="appeals" class="active">申诉复核</button>
+    <button data-tab="users" data-role="admin">用户管理</button>
+    <button data-tab="tenants" data-role="admin">租户配额</button>
+    <button data-tab="billing" data-role="admin">账单与用量</button>
+    <button data-tab="rules" data-role="admin">规则管理</button>
+  </nav>
+  <main>
+    <section id="tab-appeals" class="active">
+      <h2>申诉复核</h2>
+      <div class="row">
+        <label>状态 <select id="appealStatus"><option value="open">待复核</option><option value="accepted">已改判</option><option value="rejected">已维持</option><option value="">全部</option></select></label>
+        <button onclick="loadAppeals()">刷新</button>
+      </div>
+      <table><thead><tr><th>申诉ID</th><th>租户</th><th>判定</th><th>理由</th><th>状态</th><th>创建时间</th></tr></thead>
+      <tbody id="appealRows"></tbody></table>
+      <div id="appealDetail" style="margin-top:16px"></div>
+    </section>
+
+    <section id="tab-users">
+      <h2>用户管理</h2>
+      <div class="row">
+        <input id="userTenantFilter" placeholder="按租户ID过滤（可空）">
+        <button onclick="loadUsers()">刷新</button>
+        <span class="muted">创建用户：</span>
+        <input id="newUserTenant" placeholder="租户ID（商户角色必填）" style="width:180px">
+        <input id="newUserName" placeholder="用户名">
+        <input id="newUserPass" placeholder="密码(8-72位)">
+        <select id="newUserRole"><option value="member">member</option><option value="owner">owner</option><option value="reviewer">reviewer</option><option value="admin">admin</option></select>
+        <input id="newUserEmail" placeholder="邮箱（可选）">
+        <button onclick="createUser()">创建</button>
+      </div>
+      <table><thead><tr><th>ID</th><th>用户名</th><th>租户</th><th>角色</th><th>状态</th><th>最近登录</th><th>操作</th></tr></thead>
+      <tbody id="userRows"></tbody></table>
+    </section>
+
+    <section id="tab-tenants">
+      <h2>租户与配额</h2>
+      <div class="row"><button onclick="loadTenants()">刷新</button></div>
+      <table><thead><tr><th>租户ID</th><th>名称</th><th>状态</th><th>每日配额（点数）</th><th>操作</th></tr></thead>
+      <tbody id="tenantRows"></tbody></table>
+    </section>
+
+    <section id="tab-billing">
+      <h2>用量与账单</h2>
+      <div class="row">
+        <input id="billMonth" placeholder="YYYY-MM" style="width:120px">
+        <button onclick="loadBilling()">查询</button>
+        <button class="secondary" onclick="downloadBill('csv')">导出 CSV</button>
+        <button class="secondary" onclick="downloadBill('pdf')">导出 PDF 账单</button>
+      </div>
+      <div id="billingSummary"></div>
+    </section>
+
+    <section id="tab-rules">
+      <h2>规则管理（草稿 → 激活）</h2>
+      <div class="row">
+        <input id="ruleTenant" placeholder="租户ID" value="demo-platform" style="width:180px">
+        <button onclick="loadRules()">加载规则</button>
+      </div>
+      <table><thead><tr><th>规则ID</th><th>族</th><th>状态</th><th>版本</th><th>操作</th></tr></thead>
+      <tbody id="ruleRows"></tbody></table>
+      <pre id="rulePreview" style="display:none"></pre>
+    </section>
+  </main>
+</div>
+
+<div id="msg"></div>
+<script>
+const state = { token: sessionStorage.getItem('adg_token') || '', user: null };
+const $ = (id) => document.getElementById(id);
+function msg(text, ok = true) {
+  const el = $('msg'); el.textContent = text;
+  el.style.background = ok ? '#059669' : '#dc2626'; el.style.display = 'block';
+  setTimeout(() => { el.style.display = 'none'; }, 3200);
+}
+async function api(path, options = {}) {
+  const headers = Object.assign({}, options.headers || {});
+  if (state.token) headers['Authorization'] = 'Bearer ' + state.token;
+  if (options.body && typeof options.body !== 'string') {
+    headers['Content-Type'] = 'application/json';
+    options.body = JSON.stringify(options.body);
+  }
+  const resp = await fetch(path, Object.assign({}, options, { headers }));
+  if (resp.status === 401) { logout(); throw new Error('未登录或登录已过期'); }
+  const text = await resp.text();
+  let data = null;
+  try { data = text ? JSON.parse(text) : null; } catch (e) { data = text; }
+  if (!resp.ok) throw new Error((data && data.error && data.error.message) || ('HTTP ' + resp.status));
+  return data;
+}
+async function login() {
+  try {
+    const data = await api('/auth/login', { method: 'POST', body: { username: $('loginUser').value.trim(), password: $('loginPass').value } });
+    state.token = data.access_token; state.user = data.user;
+    sessionStorage.setItem('adg_token', state.token);
+    showApp();
+  } catch (e) { msg(e.message, false); }
+}
+function logout() {
+  state.token = ''; state.user = null; sessionStorage.removeItem('adg_token');
+  $('app').style.display = 'none'; $('login').style.display = 'block';
+}
+async function showApp() {
+  try {
+    state.user = await api('/auth/me');
+  } catch (e) { logout(); return; }
+  $('login').style.display = 'none'; $('app').style.display = 'block';
+  $('who').textContent = (state.user.username || '') + ' · ' + (state.user.role || '') + (state.user.tenant_id ? ' · ' + state.user.tenant_id : '');
+  const role = state.user.role;
+  document.querySelectorAll('nav button[data-role="admin"]').forEach(b => { b.style.display = role === 'admin' ? '' : 'none'; });
+  if (role !== 'admin' && role !== 'reviewer') { document.querySelector('nav button[data-tab="appeals"]').style.display = 'none'; }
+  if (role === 'admin' || role === 'reviewer') loadAppeals();
+}
+document.querySelectorAll('#nav button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#nav button').forEach(x => x.classList.remove('active'));
+  document.querySelectorAll('main section').forEach(s => s.classList.remove('active'));
+  b.classList.add('active'); $('tab-' + b.dataset.tab).classList.add('active');
+  const loaders = { appeals: loadAppeals, users: loadUsers, tenants: loadTenants, billing: loadBilling, rules: loadRules };
+  (loaders[b.dataset.tab] || (() => {}))();
+}));
+$('loginBtn').addEventListener('click', login);
+$('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
+$('logoutBtn').addEventListener('click', logout);
+
+function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function pill(decision) { return '<span class="pill ' + esc(decision) + '">' + esc(decision) + '</span>'; }
+
+async function loadAppeals() {
+  const status = $('appealStatus').value;
+  try {
+    const rows = await api('/admin/appeals?limit=100' + (status ? '&status=' + encodeURIComponent(status) : ''));
+    $('appealRows').innerHTML = rows.map(a =>
+      '<tr class="clickable" onclick="showAppeal(\'' + a.id + '\')"><td class="kb">' + esc(a.id) + '</td><td>' + esc(a.tenant_id) +
+      '</td><td>' + pill(a.original_decision) + '</td><td>' + esc(a.reason) + '</td><td>' + esc(a.status) +
+      '</td><td class="muted">' + esc(a.created_at) + '</td></tr>').join('') || '<tr><td colspan="6" class="muted">暂无数据</td></tr>';
+  } catch (e) { msg(e.message, false); }
+}
+async function showAppeal(id) {
+  try {
+    const d = await api('/admin/appeals/' + encodeURIComponent(id));
+    const j = d.judgment || {}; const a = d.appeal || {}; const asset = d.asset || {};
+    const violations = (j.violations || []).map(v =>
+      '<tr><td class="kb">' + esc(v.rule_id) + '</td><td>' + esc(v.family) + '</td><td>' + esc(v.clause_id || '') +
+      '</td><td>' + esc(v.article || '') + '</td><td>' + esc(v.evidence_text || '') +
+      '</td><td class="kb">' + esc(v.bbox ? JSON.stringify(v.bbox) : '') + '</td></tr>').join('');
+    $('appealDetail').innerHTML =
+      '<div class="card"><b>申诉详情</b><div class="grid2">' +
+      '<div><div class="muted">申诉理由</div>' + esc(a.reason) + '<br><div class="muted">补充说明</div>' + esc(a.detail || '-') + '</div>' +
+      '<div><div class="muted">原判定</div>' + pill(j.decision) + ' ' + esc(j.reason || '') +
+      '<div class="muted">模型版本</div>' + esc(j.model_version || '') + '</div></div></div>' +
+      '<div class="card"><b>违规证据</b><table><thead><tr><th>规则</th><th>族</th><th>条款</th><th>法条</th><th>证据</th><th>bbox</th></tr></thead><tbody>' +
+      (violations || '<tr><td colspan="6" class="muted">无违规明细</td></tr>') + '</tbody></table></div>' +
+      '<div class="card"><b>素材</b> ' + esc(asset.type || '-') + ' / ' + esc(asset.filename || '-') + ' / parse=' + esc(asset.parse_status || '-') +
+      (asset.caption ? '<div class="muted">caption: ' + esc(asset.caption) + '</div>' : '') + '</div>' +
+      '<div class="card"><b>复核</b><div class="row">结论 ' +
+      '<select id="finalDecision"><option value="pass">pass 通过</option><option value="block">block 拦截</option><option value="manual">manual 转人工</option></select>' +
+      '</div><textarea id="reviewComment" placeholder="复核意见（必填）"></textarea>' +
+      '<div class="row"><button onclick="reviewAppeal(\'' + esc(id) + '\')">提交复核</button></div></div>';
+  } catch (e) { msg(e.message, false); }
+}
+async function reviewAppeal(id) {
+  const finalDecision = $('finalDecision').value; const comment = $('reviewComment').value.trim();
+  if (!comment) { msg('复核意见必填', false); return; }
+  try {
+    const d = await api('/admin/appeals/' + encodeURIComponent(id) + '/review', { method: 'PATCH', body: { final_decision: finalDecision, comment } });
+    msg('复核完成：' + d.review_result + '，已生成反馈对 ' + d.feedback_pair_id);
+    loadAppeals(); showAppeal(id);
+  } catch (e) { msg(e.message, false); }
+}
+
+async function loadUsers() {
+  try {
+    const tenant = $('userTenantFilter').value.trim();
+    const rows = await api('/admin/users?limit=200' + (tenant ? '&tenantId=' + encodeURIComponent(tenant) : ''));
+    $('userRows').innerHTML = rows.map(u =>
+      '<tr><td class="kb">' + esc(u.id) + '</td><td>' + esc(u.username) + '</td><td>' + esc(u.tenant_id || '-') +
+      '</td><td>' + esc(u.role) + '</td><td>' + esc(u.status) + '</td><td class="muted">' + esc(u.last_login_at || '-') +
+      '</td><td><button class="secondary" onclick="resetPassword(\'' + u.id + '\')">重置密码</button> ' +
+      '<button class="secondary" onclick="toggleUser(\'' + u.id + '\',\'' + u.status + '\')">' + (u.status === 'active' ? '禁用' : '启用') + '</button></td></tr>').join('')
+      || '<tr><td colspan="7" class="muted">暂无数据</td></tr>';
+  } catch (e) { msg(e.message, false); }
+}
+async function createUser() {
+  try {
+    const body = { tenant_id: $('newUserTenant').value.trim() || null, username: $('newUserName').value.trim(),
+      password: $('newUserPass').value, role: $('newUserRole').value, email: $('newUserEmail').value.trim() || null };
+    await api('/admin/users', { method: 'POST', body }); msg('用户已创建'); loadUsers();
+  } catch (e) { msg(e.message, false); }
+}
+async function resetPassword(id) {
+  try {
+    const d = await api('/admin/users/' + encodeURIComponent(id) + '/reset-password', { method: 'POST', body: {} });
+    msg('新密码（仅显示一次）：' + (d.password || '已设置')); 
+  } catch (e) { msg(e.message, false); }
+}
+async function toggleUser(id, status) {
+  try {
+    await api('/admin/users/' + encodeURIComponent(id), { method: 'PATCH', body: { status: status === 'active' ? 'disabled' : 'active' } });
+    loadUsers();
+  } catch (e) { msg(e.message, false); }
+}
+
+async function loadTenants() {
+  try {
+    const rows = await api('/admin/tenants?limit=200');
+    $('tenantRows').innerHTML = rows.map(t =>
+      '<tr><td class="kb">' + esc(t.id) + '</td><td>' + esc(t.name) + '</td><td>' + esc(t.status) +
+      '</td><td><input id="quota-' + esc(t.id) + '" value="' + esc(t.daily_quota) + '" style="width:120px">' +
+      '</td><td><button onclick="saveTenant(\'' + esc(t.id) + '\')">保存配额</button> ' +
+      '<button class="secondary" onclick="toggleTenant(\'' + esc(t.id) + '\',\'' + esc(t.status) + '\')">' + (t.status === 'active' ? '停用' : '启用') + '</button></td></tr>').join('')
+      || '<tr><td colspan="5" class="muted">暂无数据</td></tr>';
+  } catch (e) { msg(e.message, false); }
+}
+async function saveTenant(id) {
+  try {
+    const quota = parseInt($('quota-' + id).value, 10);
+    await api('/admin/tenants/' + encodeURIComponent(id), { method: 'PATCH', body: { daily_quota: quota } });
+    msg('配额已更新'); loadTenants();
+  } catch (e) { msg(e.message, false); }
+}
+async function toggleTenant(id, status) {
+  try {
+    await api('/admin/tenants/' + encodeURIComponent(id), { method: 'PATCH', body: { status: status === 'active' ? 'disabled' : 'active' } });
+    loadTenants();
+  } catch (e) { msg(e.message, false); }
+}
+
+async function loadBilling() {
+  try {
+    const month = $('billMonth').value.trim();
+    const d = await api('/admin/billing/summary' + (month ? '?month=' + encodeURIComponent(month) : ''));
+    $('billingSummary').innerHTML = '<p class="muted">账期 ' + esc(d.month) + ' ｜ 总成本 ' + esc(d.total_cost_cny) + ' 元</p>' +
+      '<table><thead><tr><th>租户</th><th>判定次数</th><th>配额点数</th><th>成本(元)</th></tr></thead><tbody>' +
+      (d.tenants || []).map(t => '<tr><td>' + esc(t.tenant_name) + '（' + esc(t.tenant_id) + '）</td><td>' + esc(t.calls) +
+        '</td><td>' + esc(t.weight) + '</td><td>' + esc((t.cost_micro / 1000000).toFixed(4)) + '</td></tr>').join('') +
+      '</tbody></table><p class="muted">价目表</p><table><thead><tr><th>code</th><th>service</th><th>单价(元)</th><th>配额权重</th></tr></thead><tbody>' +
+      (d.prices || []).map(p => '<tr><td class="kb">' + esc(p.code) + '</td><td>' + esc(p.service) + '</td><td>' +
+        (p.unit_price_micro / 1000000).toFixed(4) + '</td><td>' + esc(p.quota_weight) + '</td></tr>').join('') +
+      '</tbody></table>';
+  } catch (e) { msg(e.message, false); }
+}
+async function downloadBill(kind) {
+  try {
+    const month = $('billMonth').value.trim();
+    const url = '/admin/billing/export.' + kind + (month ? '?month=' + encodeURIComponent(month) : '');
+    const resp = await fetch(url, { headers: { 'Authorization': 'Bearer ' + state.token } });
+    if (!resp.ok) { const t = await resp.text(); throw new Error(t || ('HTTP ' + resp.status)); }
+    const blob = await resp.blob();
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'adguard-billing-' + (month || new Date().toISOString().slice(0, 7)) + '.' + kind;
+    a.click(); URL.revokeObjectURL(a.href);
+  } catch (e) { msg(e.message, false); }
+}
+
+async function loadRules() {
+  try {
+    const tenant = $('ruleTenant').value.trim();
+    const rows = await api('/admin/rules?limit=100', { headers: { 'X-Tenant-Id': tenant } });
+    $('ruleRows').innerHTML = rows.map(r =>
+      '<tr><td class="kb">' + esc(r.rule_id) + '</td><td>' + esc(r.family) + '</td><td>' + esc(r.status) +
+      '</td><td>' + esc(r.version || '') + '</td><td><button class="secondary" onclick="activateRule(\'' + esc(tenant) + '\',\'' + esc(r.rule_id) + '\')">激活</button></td></tr>').join('')
+      || '<tr><td colspan="5" class="muted">暂无规则</td></tr>';
+  } catch (e) { msg(e.message, false); }
+}
+async function activateRule(tenant, ruleId) {
+  try {
+    const snap = await api('/admin/rules/' + encodeURIComponent(ruleId) + '/activate', { method: 'POST', headers: { 'X-Tenant-Id': tenant } });
+    msg('已激活，快照 ' + (snap.id || snap.snapshot_id || '')); loadRules();
+  } catch (e) { msg(e.message, false); }
+}
+
+if (state.token) showApp(); else { $('login').style.display = 'block'; }
+</script>
+</body>
+</html>

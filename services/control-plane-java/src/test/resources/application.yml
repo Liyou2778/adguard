@@ -1,0 +1,13 @@
+# Test profile overrides. The auth interceptor is disabled for @WebMvcTest slices (no DB/JWT beans);
+# auth logic has dedicated unit tests and end-to-end smoke coverage.
+spring:
+  jackson:
+    property-naming-strategy: SNAKE_CASE
+    default-property-inclusion: non_null
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+adguard:
+  auth:
+    enabled: false

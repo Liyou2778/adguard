@@ -1,6 +1,7 @@
 ﻿# AdGuard M7 acceptance smoke test: multimodal parsing (image OCR/bbox), landing-page URL,
 # antivirus quarantine. Runs against a local or cloud gateway.
 param(
+    [string]$AdminKey = '',
     [string]$Gateway = 'http://127.0.0.1:8080',
     [string]$ControlPlane = 'http://127.0.0.1:8081',
     [string]$Tenant = 'demo-platform',
@@ -21,6 +22,7 @@ function Check([string]$Name, [bool]$Ok, [string]$Detail = '') {
 function Invoke-Json([string]$Method, [string]$Url, $Body = $null, [string]$TenantId = '') {
     $headers = @{}
     if ($TenantId) { $headers['X-Tenant-Id'] = $TenantId }
+    if ($AdminKey) { $headers['X-Admin-Key'] = $AdminKey }
     $json = $null
     if ($null -ne $Body) { $json = $Body | ConvertTo-Json -Depth 8 -Compress }
     $body = ''

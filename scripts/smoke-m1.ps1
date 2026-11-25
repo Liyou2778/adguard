@@ -9,6 +9,7 @@
 # Exit code 0 = all checks passed.
 
 param(
+    [string]$AdminKey = '',
     [string]$Gateway = 'http://127.0.0.1:8080',
     [string]$ControlPlane = 'http://127.0.0.1:8081',
     [string]$Tenant = 'demo-platform',
@@ -32,6 +33,7 @@ function Check([string]$Name, [bool]$Ok, [string]$Detail = '') {
 function Invoke-Json([string]$Method, [string]$Url, $Body = $null, [string]$TenantId = '') {
     $headers = @{}
     if ($TenantId) { $headers['X-Tenant-Id'] = $TenantId }
+    if ($AdminKey) { $headers['X-Admin-Key'] = $AdminKey }
     $params = @{ Method = $Method; Uri = $Url; Headers = $headers; UseBasicParsing = $true; TimeoutSec = 60 }
     if ($null -ne $Body -and "$Body" -ne '') {
         $params.Body = ($Body | ConvertTo-Json -Depth 10)

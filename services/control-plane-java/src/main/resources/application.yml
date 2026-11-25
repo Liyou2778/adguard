@@ -33,3 +33,14 @@ logging:
   level:
     root: INFO
     com.adguard.controlplane: INFO
+adguard:
+  auth:
+    jwt-secret: ${ADGUARD_JWT_SECRET:}
+    token-ttl-hours: ${ADGUARD_TOKEN_TTL_HOURS:12}
+    admin-key: ${ADGUARD_ADMIN_KEY:}
+    bootstrap-admin-username: ${ADGUARD_BOOTSTRAP_ADMIN_USERNAME:admin}
+    bootstrap-admin-password: ${ADGUARD_BOOTSTRAP_ADMIN_PASSWORD:}
+    required: ${ADGUARD_AUTH_REQUIRED:false}
+  billing:
+    # TTF/TTC path used for Chinese PDF bills; empty -> auto-detect common system fonts.
+    pdf-font: ${ADGUARD_PDF_FONT:}
