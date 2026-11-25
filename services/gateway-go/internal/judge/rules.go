@@ -165,7 +165,7 @@ func (j *RuleJudge) fromParsed(ctx context.Context, asset *model.Asset, started 
 	}
 	if strings.TrimSpace(parsed.Text) == "" {
 		status := "degraded"
-		j.storeParse(ctx, asset, status, parsed)
+		j.storeParse(ctx, asset, status, parsed, nil)
 		reason := "multimodal parse produced no usable text (degraded) - routed to manual review"
 		if len(parsed.Warnings) > 0 {
 			reason = "multimodal parse degraded: " + truncate(strings.Join(parsed.Warnings, "; "), 300)
@@ -176,7 +176,8 @@ func (j *RuleJudge) fromParsed(ctx context.Context, asset *model.Asset, started 
 	if parsed.Degraded {
 		status = "degraded"
 	}
-	j.storeParse(ctx, asset, status, parsed)
+	consistency := j.checkConsistency(ctx, asset, parsed)
+	j.storeParse(ctx, asset, status, parsed, consistency)
 	judgment, err := j.judgeWithPipeline(ctx, asset, started, parsed.Text, parsed.Lines)
 	if err != nil {
 		return nil, err
@@ -184,6 +185,9 @@ func (j *RuleJudge) fromParsed(ctx context.Context, asset *model.Asset, started 
 	if parsed.Degraded && len(parsed.Warnings) > 0 {
 		judgment.Reason = truncate(judgment.Reason+"（parse degraded: "+
 			strings.Join(parsed.Warnings, "; ")+"）", 500)
+	}
+	if consistency != nil && len(consistency.Conflicts) > 0 {
+		applyConsistency(judgment, consistency)
 	}
 	return judgment, nil
 }
@@ -292,31 +296,34 @@ func attachBBoxes(violations []model.Violation, lines []pipeline.ParseElement) {
 }
 
 type parseEvidence struct {
-	AssetType  string               `json:"asset_type"`
-	Degraded   bool                 `json:"degraded"`
-	Warnings   []string             `json:"warnings"`
-	RoleCounts map[string]int       `json:"role_counts"`
-	Frames     int                  `json:"frames"`
-	Scan       *pipeline.ScanResult `json:"scan,omitempty"`
-	TextChars  int                  `json:"text_chars"`
-	Text       string               `json:"text"`
-	Meta       map[string]any       `json:"meta,omitempty"`
+	AssetType   string                      `json:"asset_type"`
+	Degraded    bool                        `json:"degraded"`
+	Warnings    []string                    `json:"warnings"`
+	RoleCounts  map[string]int              `json:"role_counts"`
+	Frames      int                         `json:"frames"`
+	Scan        *pipeline.ScanResult        `json:"scan,omitempty"`
+	Consistency *pipeline.ConsistencyResult `json:"consistency,omitempty"`
+	TextChars   int                         `json:"text_chars"`
+	Text        string                      `json:"text"`
+	Meta        map[string]any              `json:"meta,omitempty"`
 }
 
-func (j *RuleJudge) storeParse(ctx context.Context, asset *model.Asset, status string, parsed *pipeline.ParsedAsset) {
+func (j *RuleJudge) storeParse(ctx context.Context, asset *model.Asset, status string,
+	parsed *pipeline.ParsedAsset, consistency *pipeline.ConsistencyResult) {
 	if j.store == nil || parsed == nil {
 		return
 	}
 	evidence := parseEvidence{
-		AssetType:  parsed.AssetType,
-		Degraded:   parsed.Degraded,
-		Warnings:   parsed.Warnings,
-		RoleCounts: parsed.RoleCounts,
-		Frames:     parsed.Frames,
-		Scan:       parsed.Scan,
-		TextChars:  len([]rune(parsed.Text)),
-		Text:       truncate(parsed.Text, maxParseTextRune),
-		Meta:       parsed.Meta,
+		AssetType:   parsed.AssetType,
+		Degraded:    parsed.Degraded,
+		Warnings:    parsed.Warnings,
+		RoleCounts:  parsed.RoleCounts,
+		Frames:      parsed.Frames,
+		Scan:        parsed.Scan,
+		Consistency: consistency,
+		TextChars:   len([]rune(parsed.Text)),
+		Text:        truncate(parsed.Text, maxParseTextRune),
+		Meta:        parsed.Meta,
 	}
 	raw, err := json.Marshal(evidence)
 	if err != nil {
@@ -375,4 +382,58 @@ func scanRequired() bool {
 	default:
 		return false
 	}
+}
+
+// checkConsistency compares the merchant caption with the parsed OCR text (FR-6). A failure is
+// advisory only: the asset is still judged, with the missing consistency signal recorded.
+func (j *RuleJudge) checkConsistency(ctx context.Context, asset *model.Asset,
+	parsed *pipeline.ParsedAsset) *pipeline.ConsistencyResult {
+	if j.client == nil || parsed == nil {
+		return nil
+	}
+	if asset.Type != "image" && asset.Type != "video" {
+		return nil
+	}
+	caption := strings.TrimSpace(asset.Caption)
+	if caption == "" || strings.TrimSpace(parsed.Text) == "" {
+		return nil
+	}
+	result, err := j.client.Consistency(ctx, caption, parsed.Text, parsed.Lines)
+	if err != nil {
+		j.logger.Warn("cross-modal consistency unavailable; continuing with rules only",
+			"asset_id", asset.ID, "tenant_id", asset.TenantID, "err", err)
+		return nil
+	}
+	return result
+}
+
+// applyConsistency merges FR-6 conflicts into the judgment. Policy: a consistency conflict
+// never blocks automatically; a pass decision is downgraded to manual review, and the violation
+// carries both evidence snippets plus the OCR bbox when available.
+func applyConsistency(judgment *model.Judgment, result *pipeline.ConsistencyResult) {
+	for _, conflict := range result.Conflicts {
+		ruleID := "CONSISTENCY-" + strings.ToUpper(strings.ReplaceAll(conflict.Attribute, " ", "_"))
+		if conflict.Attribute == "" || conflict.Attribute == "other" {
+			ruleID = "CONSISTENCY-SEMANTIC"
+		}
+		violation := model.Violation{
+			RuleID:       ruleID,
+			Family:       "cross_modal_consistency",
+			Canonical:    conflict.Attribute,
+			EvidenceText: conflict.EvidenceCaption + " ≠ " + conflict.EvidenceImage,
+			Confidence:   conflict.Confidence,
+			BBox:         conflict.BBox,
+		}
+		if len(conflict.SpanImage) == 2 {
+			start, end := conflict.SpanImage[0], conflict.SpanImage[1]
+			violation.SpanStart = &start
+			violation.SpanEnd = &end
+		}
+		judgment.Violations = append(judgment.Violations, violation)
+	}
+	if judgment.Decision == "pass" {
+		judgment.Decision = "manual"
+	}
+	judgment.Reason = truncate(judgment.Reason+"；图文一致性冲突 "+
+		fmt.Sprint(len(result.Conflicts))+" 处（商家文案与图片文字不一致），转人工复核", 500)
 }

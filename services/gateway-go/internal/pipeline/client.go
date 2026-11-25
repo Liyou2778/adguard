@@ -261,3 +261,79 @@ func multipartPayload(fields map[string]string, fileField, filename string, data
 	}
 	return buf.Bytes(), writer.FormDataContentType(), nil
 }
+
+// --------------------------------------------------------------------------- M10 consistency (FR-6)
+// ConsistencyConflict mirrors one Python /v1/consistency conflict item.
+type ConsistencyConflict struct {
+	Attribute       string    `json:"attribute"`
+	CaptionValue    string    `json:"caption_value"`
+	ImageValue      string    `json:"image_value"`
+	EvidenceCaption string    `json:"evidence_caption"`
+	EvidenceImage   string    `json:"evidence_image"`
+	Confidence      float64   `json:"confidence"`
+	Source          string    `json:"source"`
+	SpanImage       []int     `json:"span_image"`
+	BBox            []float64 `json:"bbox"`
+}
+
+// ConsistencyResult mirrors the Python /v1/consistency response.
+type ConsistencyResult struct {
+	Conflicts []ConsistencyConflict `json:"conflicts"`
+	Degraded  bool                  `json:"degraded"`
+	LLMUsed   bool                  `json:"llm_used"`
+	Warnings  []string              `json:"warnings"`
+	Engine    string                `json:"engine"`
+}
+
+type consistencyLine struct {
+	Text string    `json:"text"`
+	BBox []float64 `json:"bbox,omitempty"`
+	Role string    `json:"role,omitempty"`
+}
+
+// Consistency asks the pipeline to compare a merchant caption against OCR text (FR-6).
+func (c *Client) Consistency(ctx context.Context, caption, imageText string,
+	lines []ParseElement) (*ConsistencyResult, error) {
+	if c == nil {
+		return nil, ErrUnavailable
+	}
+	requestLines := make([]consistencyLine, 0, len(lines))
+	for _, line := range lines {
+		requestLines = append(requestLines, consistencyLine{Text: line.Text, BBox: line.BBox,
+			Role: line.Role})
+	}
+	payload, err := json.Marshal(map[string]any{
+		"caption":    caption,
+		"image_text": imageText,
+		"lines":      requestLines,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("encode consistency request: %w", err)
+	}
+	req, err := http.NewRequestWithContext(ctx, http.MethodPost, c.baseURL+"/v1/consistency",
+		bytes.NewReader(payload))
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json; charset=utf-8")
+	client := c.http
+	timeout := 90 * time.Second
+	if timeout > c.http.Timeout {
+		client = &http.Client{Timeout: timeout}
+	}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil, fmt.Errorf("%w: %v", ErrUnavailable, err)
+	}
+	defer resp.Body.Close()
+	body, _ := io.ReadAll(io.LimitReader(resp.Body, 4<<20))
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("%w: /v1/consistency returned %d: %s", ErrUnavailable,
+			resp.StatusCode, string(body))
+	}
+	var parsed ConsistencyResult
+	if err := json.Unmarshal(body, &parsed); err != nil {
+		return nil, fmt.Errorf("decode consistency response: %w", err)
+	}
+	return &parsed, nil
+}

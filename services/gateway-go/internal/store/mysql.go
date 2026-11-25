@@ -61,10 +61,10 @@ func (s *MySQL) CreateUpload(ctx context.Context, asset *model.Asset, session *m
 	defer func() { _ = tx.Rollback() }()
 
 	_, err = tx.ExecContext(ctx, `INSERT INTO asset
-		(id, tenant_id, type, status, size_bytes, mime_type, filename, created_at, updated_at)
-		VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		(id, tenant_id, type, status, size_bytes, mime_type, filename, caption, created_at, updated_at)
+		VALUES (?, ?, ?, ?, ?, ?, ?, NULLIF(?, ''), ?, ?)`,
 		asset.ID, asset.TenantID, asset.Type, asset.Status, asset.SizeBytes, asset.MimeType,
-		asset.Filename, asset.CreatedAt, asset.UpdatedAt)
+		asset.Filename, asset.Caption, asset.CreatedAt, asset.UpdatedAt)
 	if err != nil {
 		return err
 	}
@@ -81,10 +81,10 @@ func (s *MySQL) CreateUpload(ctx context.Context, asset *model.Asset, session *m
 
 func (s *MySQL) CreateAsset(ctx context.Context, asset *model.Asset) error {
 	_, err := s.db.ExecContext(ctx, `INSERT INTO asset
-		(id, tenant_id, type, status, source_url, digest, size_bytes, mime_type, filename, created_at, updated_at)
-		VALUES (?, ?, ?, ?, NULLIF(?,''), NULLIF(?,''), ?, NULLIF(?,''), NULLIF(?,''), ?, ?)`,
+		(id, tenant_id, type, status, source_url, digest, size_bytes, mime_type, filename, caption, created_at, updated_at)
+		VALUES (?, ?, ?, ?, NULLIF(?, ''), NULLIF(?, ''), ?, NULLIF(?, ''), NULLIF(?, ''), NULLIF(?, ''), ?, ?)`,
 		asset.ID, asset.TenantID, asset.Type, asset.Status, asset.SourceURL, asset.Digest,
-		asset.SizeBytes, asset.MimeType, asset.Filename, asset.CreatedAt, asset.UpdatedAt)
+		asset.SizeBytes, asset.MimeType, asset.Filename, asset.Caption, asset.CreatedAt, asset.UpdatedAt)
 	if isDuplicateKey(err) {
 		return ErrDuplicateDigest
 	}
@@ -92,7 +92,7 @@ func (s *MySQL) CreateAsset(ctx context.Context, asset *model.Asset) error {
 }
 
 func (s *MySQL) UpdateAssetParse(ctx context.Context, tenantID, assetID, parseStatus, parseMeta string) error {
-	_, err := s.db.ExecContext(ctx, `UPDATE asset SET parse_status = ?, parse_meta = NULLIF(?,'')
+	_, err := s.db.ExecContext(ctx, `UPDATE asset SET parse_status = ?, parse_meta = NULLIF(?, '')
 		WHERE tenant_id = ? AND id = ?`, parseStatus, parseMeta, tenantID, assetID)
 	return err
 }
@@ -138,7 +138,7 @@ func (s *MySQL) GetAsset(ctx context.Context, tenantID, assetID string) (*model.
 	row := s.db.QueryRowContext(ctx, `SELECT id, tenant_id, type, status, COALESCE(object_key,''),
 		COALESCE(source_url,''), COALESCE(parse_status,''), COALESCE(CAST(parse_meta AS CHAR),''),
 		COALESCE(digest,''), size_bytes, COALESCE(mime_type,''), COALESCE(filename,''),
-		COALESCE(deduped_from,''), created_at, updated_at
+		COALESCE(caption,''), COALESCE(deduped_from,''), created_at, updated_at
 		FROM asset WHERE tenant_id = ? AND id = ?`, tenantID, assetID)
 	return scanAsset(row)
 }
@@ -147,7 +147,7 @@ func (s *MySQL) FindAssetByDigest(ctx context.Context, tenantID, digest string) 
 	row := s.db.QueryRowContext(ctx, `SELECT id, tenant_id, type, status, COALESCE(object_key,''),
 		COALESCE(source_url,''), COALESCE(parse_status,''), COALESCE(CAST(parse_meta AS CHAR),''),
 		COALESCE(digest,''), size_bytes, COALESCE(mime_type,''), COALESCE(filename,''),
-		COALESCE(deduped_from,''), created_at, updated_at
+		COALESCE(caption,''), COALESCE(deduped_from,''), created_at, updated_at
 		FROM asset WHERE tenant_id = ? AND digest = ? LIMIT 1`, tenantID, digest)
 	return scanAsset(row)
 }
@@ -184,7 +184,7 @@ func (s *MySQL) CreateJudgment(ctx context.Context, j *model.Judgment) error {
 	if _, err := tx.ExecContext(ctx, `INSERT INTO judgment
 		(id, asset_id, tenant_id, rule_snapshot_id, model_version, decision, reason, latency_ms,
 		 cost_micro, created_at)
-		VALUES (?, ?, ?, NULLIF(?,''), ?, ?, ?, ?, ?, ?)`,
+		VALUES (?, ?, ?, NULLIF(?, ''), ?, ?, ?, ?, ?, ?)`,
 		j.ID, j.AssetID, j.TenantID, j.RuleSnapshotID, j.ModelVersion, j.Decision, j.Reason,
 		j.LatencyMS, j.CostMicro, j.CreatedAt); err != nil {
 		return err
@@ -307,7 +307,7 @@ func (s *MySQL) PriceForJudge(ctx context.Context, assetType string) (model.Judg
 func (s *MySQL) RecordUsage(ctx context.Context, usage *model.UsageRecord) error {
 	_, err := s.db.ExecContext(ctx, `INSERT INTO usage_record
 		(id, tenant_id, asset_id, judgment_id, asset_type, weight, cost_micro, billed_date, created_at)
-		VALUES (?, ?, ?, NULLIF(?,''), ?, ?, ?, ?, ?)`,
+		VALUES (?, ?, ?, NULLIF(?, ''), ?, ?, ?, ?, ?)`,
 		usage.ID, usage.TenantID, usage.AssetID, usage.JudgmentID, usage.AssetType, usage.Weight,
 		usage.CostMicro, usage.BilledDate.Format("2006-01-02"), usage.CreatedAt)
 	return err
@@ -353,7 +353,7 @@ func scanAsset(row scanner) (*model.Asset, error) {
 	var a model.Asset
 	err := row.Scan(&a.ID, &a.TenantID, &a.Type, &a.Status, &a.ObjectKey, &a.SourceURL,
 		&a.ParseStatus, &a.ParseMeta, &a.Digest, &a.SizeBytes,
-		&a.MimeType, &a.Filename, &a.DedupedFrom, &a.CreatedAt, &a.UpdatedAt)
+		&a.MimeType, &a.Filename, &a.Caption, &a.DedupedFrom, &a.CreatedAt, &a.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
 		return nil, ErrNotFound
 	}

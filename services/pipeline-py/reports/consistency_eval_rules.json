@@ -1,0 +1,532 @@
+{
+  "dataset_version": "2026-11-25",
+  "mode": "rules",
+  "llm_configured": false,
+  "pairs": 30,
+  "positives": 15,
+  "negatives": 15,
+  "tp": 12,
+  "fn": 3,
+  "fp": 0,
+  "tn": 15,
+  "recall": 0.8,
+  "false_positive_rate": 0.0,
+  "precision": 1.0,
+  "gate": {
+    "recall_min": 0.9,
+    "fpr_max": 0.1,
+    "pass": false
+  },
+  "details": [
+    {
+      "id": "c01",
+      "tag": "price",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "price",
+          "caption_value": "99",
+          "image_value": "199",
+          "evidence_caption": "到手价 99 元",
+          "evidence_image": "活动价 199 元",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            9
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c02",
+      "tag": "price",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "price",
+          "caption_value": "99",
+          "image_value": "129",
+          "evidence_caption": "到手价 99 元",
+          "evidence_image": "售价 129 元",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            8
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c03",
+      "tag": "discount",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "discount",
+          "caption_value": "0.5",
+          "image_value": "0.8",
+          "evidence_caption": "5 折",
+          "evidence_image": "8 折",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            3,
+            6
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c04",
+      "tag": "discount",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "discount",
+          "caption_value": "0.5",
+          "image_value": "0.7",
+          "evidence_caption": "五折",
+          "evidence_image": "七折",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            2
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c05",
+      "tag": "gift",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "gift",
+          "caption_value": "buy1_gift1",
+          "image_value": "nth2_half",
+          "evidence_caption": "买一送一",
+          "evidence_image": "第二件半价",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            5
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c06",
+      "tag": "gift",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "gift",
+          "caption_value": "buy2_gift1",
+          "image_value": "buy1_gift1",
+          "evidence_caption": "买二送一",
+          "evidence_image": "买一送一",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            4
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c07",
+      "tag": "coupon",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "discount",
+          "caption_value": "man100jian50",
+          "image_value": "man200jian20",
+          "evidence_caption": "满 100 减 50",
+          "evidence_image": "满 200 减 20",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            10
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c08",
+      "tag": "spec",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "spec",
+          "caption_value": "500ml",
+          "image_value": "750ml",
+          "evidence_caption": "500ml",
+          "evidence_image": "750ml",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            5
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c09",
+      "tag": "spec",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "spec",
+          "caption_value": "250g",
+          "image_value": "500g",
+          "evidence_caption": "250g",
+          "evidence_image": "500g",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            4
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c10",
+      "tag": "validity",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "validity",
+          "caption_value": "7天",
+          "image_value": "30天",
+          "evidence_caption": "活动 7 天内",
+          "evidence_image": "仅限 30 天",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            0,
+            7
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c11",
+      "tag": "validity",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "validity",
+          "caption_value": "3天",
+          "image_value": "7天",
+          "evidence_caption": "限时 3 天",
+          "evidence_image": "7 天",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            4,
+            8
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c12",
+      "tag": "price",
+      "expected": true,
+      "predicted": true,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [
+        {
+          "attribute": "price",
+          "caption_value": "199",
+          "image_value": "99",
+          "evidence_caption": "到手价 199 元",
+          "evidence_image": "99 元",
+          "confidence": 0.95,
+          "source": "rule",
+          "span_image": [
+            3,
+            8
+          ],
+          "bbox": null
+        }
+      ],
+      "warnings": []
+    },
+    {
+      "id": "c13",
+      "tag": "semantic",
+      "expected": true,
+      "predicted": false,
+      "correct": false,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "c14",
+      "tag": "semantic",
+      "expected": true,
+      "predicted": false,
+      "correct": false,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "c15",
+      "tag": "semantic",
+      "expected": true,
+      "predicted": false,
+      "correct": false,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n01",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n02",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n03",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n04",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n05",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n06",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n07",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n08",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n09",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n10",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n11",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n12",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n13",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n14",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    },
+    {
+      "id": "n15",
+      "tag": "negative",
+      "expected": false,
+      "predicted": false,
+      "correct": true,
+      "llm_used": false,
+      "degraded": false,
+      "conflicts": [],
+      "warnings": []
+    }
+  ]
+}

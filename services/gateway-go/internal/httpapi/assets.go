@@ -35,6 +35,7 @@ type createAssetRequest struct {
 	MimeType  string `json:"mime_type"`
 	Type      string `json:"type"`
 	SourceURL string `json:"source_url"` // landing_page only (M7)
+	Caption   string `json:"caption"`    // merchant copy for FR-6 consistency (image/video)
 	ChunkSize int    `json:"chunk_size"`
 }
 
@@ -108,6 +109,7 @@ func (s *Server) createAsset(w http.ResponseWriter, r *http.Request) {
 		SizeBytes: req.SizeBytes,
 		MimeType:  normaliseMime(req.MimeType),
 		Filename:  sanitiseFilename(req.Filename),
+		Caption:   normaliseCaption(req.Caption),
 		CreatedAt: now,
 		UpdatedAt: now,
 	}
@@ -232,6 +234,14 @@ func (s *Server) enforceQuota(w http.ResponseWriter, r *http.Request, tenant, as
 	}
 	return true
 }
+func normaliseCaption(value string) string {
+	caption := strings.TrimSpace(value)
+	if len([]rune(caption)) > 2048 {
+		caption = string([]rune(caption)[:2048])
+	}
+	return caption
+}
+
 func (s *Server) uploadChunk(w http.ResponseWriter, r *http.Request) {
 	tenant := tenantFrom(r)
 	assetID := chi.URLParam(r, "assetID")

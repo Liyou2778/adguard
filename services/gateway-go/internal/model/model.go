@@ -26,6 +26,7 @@ type Asset struct {
 	SizeBytes   int64     `json:"size_bytes"`
 	MimeType    string    `json:"mime_type,omitempty"`
 	Filename    string    `json:"filename,omitempty"`
+	Caption     string    `json:"caption,omitempty"` // merchant copy used for FR-6 consistency
 	DedupedFrom string    `json:"deduped_from,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`

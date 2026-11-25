@@ -341,3 +341,39 @@ async def parse_asset(
 
     parsed = await run_in_threadpool(_run)
     return ParseResponse(**parsed.to_dict())
+
+
+# --------------------------------------------------------------------------- M10 consistency (FR-6)
+class ConsistencyLine(BaseModel):
+    text: str
+    bbox: list[float] | None = None
+    role: str | None = None
+
+
+class ConsistencyRequest(BaseModel):
+    caption: str = Field(default="", max_length=2048)
+    image_text: str = Field(default="", max_length=200_000)
+    lines: list[ConsistencyLine] = []
+    use_llm: bool | None = None
+
+
+class ConsistencyResponse(BaseModel):
+    conflicts: list[dict[str, Any]] = []
+    degraded: bool = False
+    llm_used: bool = False
+    warnings: list[str] = []
+    engine: str = "rules"
+
+
+@app.post("/v1/consistency", response_model=ConsistencyResponse)
+def consistency(request: ConsistencyRequest) -> ConsistencyResponse:
+    """FR-6 cross-modal consistency: merchant caption vs creative OCR text."""
+    from .consistency import check_consistency
+
+    result = check_consistency(
+        request.caption,
+        request.image_text,
+        [line.model_dump() for line in request.lines],
+        request.use_llm,
+    )
+    return ConsistencyResponse(**result.to_dict())
