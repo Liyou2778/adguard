@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="utf-8">
+<title>AdGuard 营销素材合规审核平台 · 交付验收摘要</title>
+<style>
+  @page { size: A4 portrait; margin: 7mm 8mm 6mm 8mm; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; }
+  body {
+    font-family: "Microsoft YaHei", "PingFang SC", "Segoe UI", sans-serif;
+    color: #14213d; font-size: 8.5pt; line-height: 1.35; width: 194mm;
+  }
+  .accent { color: #b42318; }
+  .muted { color: #5b6577; }
+  .small { font-size: 7.4pt; }
+  header { border-bottom: 2.2px solid #14213d; padding-bottom: 2.8mm; margin-bottom: 2.4mm; }
+  .title-row { display: flex; align-items: flex-end; justify-content: space-between; gap: 4mm; }
+  h1 { font-size: 17.5pt; margin: 0 0 1mm 0; letter-spacing: .3px; }
+  .subtitle { font-size: 9.6pt; color: #3a4a6b; margin: 0; }
+  .meta { text-align: right; font-size: 7.6pt; color: #5b6577; line-height: 1.5; white-space: nowrap; }
+  .kpis { display: grid; grid-template-columns: repeat(4, 1fr); gap: 2mm; margin: 2.2mm 0 2.6mm; }
+  .kpi { border: 1px solid #d4dbe8; border-left: 3px solid #14213d; padding: 1.8mm 2.2mm; background: #f8fafc; }
+  .kpi .num { font-size: 13pt; font-weight: 700; line-height: 1.15; }
+  .kpi .lab { font-size: 7.3pt; color: #5b6577; }
+  .section { margin-top: 2.2mm; }
+  h2 { font-size: 9.6pt; margin: 0 0 1.4mm 0; padding-left: 2.2mm; border-left: 3px solid #b42318; line-height: 1.25; }
+  .cols { display: grid; grid-template-columns: 56% 1fr; gap: 4mm; }
+  .arch { border: 1px solid #d4dbe8; padding: 2mm 2.2mm; background: #fbfcfe; }
+  .layer { display: flex; align-items: stretch; gap: 1.4mm; margin-bottom: 1.3mm; }
+  .layer:last-child { margin-bottom: 0; }
+  .tag { flex: 0 0 15mm; background: #14213d; color: #fff; font-size: 7pt; display: flex; align-items: center; justify-content: center; text-align: center; padding: 1mm; line-height: 1.2; }
+  .node { flex: 1; border: 1px solid #c9d3e3; background: #fff; padding: 1mm 1.4mm; font-size: 7.2pt; line-height: 1.3; }
+  .node b { font-weight: 700; }
+  .arrow { color: #6b7a94; font-size: 8pt; font-weight: 700; line-height: 1; margin: .25mm 0 .6mm 7mm; }
+  ul { margin: 0; padding-left: 4mm; }
+  li { margin-bottom: .9mm; }
+  .cap { font-size: 7.9pt; }
+  table { width: 100%; border-collapse: collapse; font-size: 7.75pt; }
+  th, td { border-bottom: 1px solid #dde3ec; padding: 0.88mm 1.3mm; vertical-align: top; text-align: left; }
+  th { background: #eef2f8; font-weight: 700; color: #22304f; }
+  td.k { width: 21%; font-weight: 700; color: #14213d; }
+  .ok { color: #067647; font-weight: 700; }
+  .warn { color: #b54708; font-weight: 700; }
+  .bad { color: #b42318; font-weight: 700; }
+  .two { display: grid; grid-template-columns: 1fr 1fr; gap: 3.4mm; }
+  .box { border: 1px solid #d4dbe8; padding: 2mm 2.4mm; }
+  .box h3 { margin: 0 0 1.2mm 0; font-size: 8.4pt; }
+  .limits { font-size: 7.5pt; color: #3a4a6b; }
+  .limits li { margin-bottom: .55mm; }
+  footer { margin-top: 2.2mm; border-top: 1px solid #14213d; padding-top: 1.4mm; font-size: 6.9pt; color: #5b6577; line-height: 1.4; }
+  .foot-links { display: flex; flex-wrap: wrap; gap: 1.2mm 4mm; }
+  .pill { display: inline-block; border: 1px solid #c9d3e3; border-radius: 2mm; padding: 0 1.6mm; margin: 0 .8mm .8mm 0; background: #fff; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <div>
+      <h1>AdGuard 营销素材合规审核平台</h1>
+      <p class="subtitle">交付验收摘要 · 规则可解释 · 多模态解析 · 运营闭环 · 私有化部署</p>
+    </div>
+    <div class="meta">
+      版本 v1.0 ｜ 2026-11-26<br>
+      环境：本地 + 阿里云 ECS m12 + AutoDL<br>
+      性质：企业私有化部署 · 内部验收材料
+    </div>
+  </div>
+</header>
+
+<div class="kpis">
+  <div class="kpi"><div class="num">12</div><div class="lab">里程碑交付（M0–M12）</div></div>
+  <div class="kpi"><div class="num">158</div><div class="lab">项自动化冒烟检查（7 套）</div></div>
+  <div class="kpi"><div class="num">P0/P1</div><div class="lab">PRD 功能 100% 交付</div></div>
+  <div class="kpi"><div class="num">0 / 346</div><div class="lab">7B 混合判定条款错引</div></div>
+</div>
+
+<div class="cols">
+  <div>
+    <section>
+      <h2>01 系统定位与核心链路</h2>
+      <p style="margin:0 0 1.8mm 0;">面向广告主/平台的市场营销素材合规审核：<b>规则为权威、模型为二审</b>，每条违规可追溯到条款、罚则区间、原文 span/bbox；支持多模态素材、图文一致性、申诉回流、多租户配额与账单。</p>
+      <div class="arch">
+        <div class="layer"><div class="tag">接入层</div><div class="node"><b>Web/API</b> → <b>nginx 灰度</b> → <b>Go Gateway</b>（JWT/API Key、配额、分片上传、病毒扫描、解析编排、审计）</div></div>
+        <div class="arrow">↓</div>
+        <div class="layer"><div class="tag">控制面</div><div class="node"><b>Java Control Plane</b>：规则库/不可变快照 · 用户/角色/首次改密 · 申诉复核 · 配额/账单/审计</div></div>
+        <div class="arrow">↓</div>
+        <div class="layer"><div class="tag">智能面</div><div class="node"><b>Python Pipeline</b>：归一化 → BM25+Dense+RRF 检索 → 规则匹配 → 条款检索 → 模型二审；图文一致性（规则+LLM 灰区）；OCR/ASR/落地页解析</div></div>
+        <div class="arrow">↓</div>
+        <div class="layer"><div class="tag">数据/运行</div><div class="node"><b>MySQL RDS · Redis · OSS/S3 · SQLite 索引</b><br>ECS systemd · ClamAV · RapidOCR · faster-whisper · vLLM 7B（可选）</div></div>
+      </div>
+    </section>
+  </div>
+
+  <div>
+    <section>
+      <h2>02 核心能力</h2>
+      <ul class="cap">
+        <li><b>规则与快照</b>：规则库、草稿→激活→灰度，判定绑定不可变快照，可复现、可回滚。</li>
+        <li><b>检索判定</b>：BM25 + 向量 + RRF + 可解释 rerank；规则命中 + 条款检索，违规必带 rule_id/条款/罚则。</li>
+        <li><b>多模态</b>：图片 OCR+版面 bbox；视频关键帧 OCR+语音 ASR；落地页 DOM/截图；ClamAV 病毒扫描。</li>
+        <li><b>图文一致性</b>：caption vs 图片文字，断言抽取 + LLM 语义灰区，冲突转人工复核。</li>
+        <li><b>运营闭环</b>：商家申诉→复核→DPO 偏好对；多租户配额（超限 429）、成本归集、CSV/中文 PDF 账单。</li>
+        <li><b>工程与安全</b>：JWT/BCrypt/API Key；首次登录强制改密、5 次失败锁定；SSRF 防护、审计日志、灰度回滚。</li>
+      </ul>
+    </section>
+  </div>
+</div>
+
+<section class="section">
+  <h2>03 实测验收指标（全部本地/云上真实执行）</h2>
+  <table>
+    <tr><th style="width:20%">类别</th><th>实测结果</th><th style="width:15%">结论</th></tr>
+    <tr><td class="k">功能验收（本地 + ECS）</td><td>M1 29/29 · M3 21/21 · M7 19/19 · M8 <b>37/37</b> · M9 18/18 · M10 18/18 · M12 <b>16/16</b>；<code>ci.ps1 -Full</code>（Go/Python/Java+Testcontainers MySQL）<b>PASS</b></td><td class="ok">全部通过</td></tr>
+    <tr><td class="k">图文一致性（FR-6）</td><td>30 对构造样本（15 冲突/15 非冲突），真实 DeepSeek：<b>recall 1.000 / FPR 0.000 / precision 1.000</b>（本地 + ECS）；纯规则基线 recall 0.80 如实记录</td><td class="ok">AC 达成</td></tr>
+    <tr><td class="k">7B 服务端门禁（535 条）</td><td>Qwen2.5-7B-SFT：recall <b>1.0000</b>、误杀 <b>1.23%</b>、条款错引 <b>0.80%</b>、JSON <b>100%</b></td><td class="warn">3/4（错引未达 0）</td></tr>
+    <tr><td class="k">7B 混合判定（535 条）</td><td>误杀 <b>0</b>、条款错引 <b>0/346</b>、规则 block 降级 <b>0</b>、模型不可用 <b>0</b>、召回 93.01%（规则上限）、人工率 5.23%</td><td class="warn">未过门禁，生产保留 rule</td></tr>
+    <tr><td class="k">推理性能（vLLM 7B）</td><td>c=32 <b>13.89 req/s</b>、TTFT <b>58ms</b>、TPOT <b>23.3ms</b>、<b>0 错误</b></td><td class="ok">可服务</td></tr>
+    <tr><td class="k">生产上线（ECS m12）</td><td>nginx 灰度：10%→<b>8%</b>（100 请求）、50%→<b>47.6%</b>（500 请求）、100%→92%（in-flight）；cutover/rollback 通过，公网 healthz 200</td><td class="ok">上线验收</td></tr>
+    <tr><td class="k">安全与合规</td><td>JWT/API Key 鉴权、首次改密+登录锁定、ClamAV 病毒隔离（EICAR 实测）、SSRF 防护、audit_log 全链路</td><td class="ok">通过</td></tr>
+  </table>
+</section>
+
+<div class="two section">
+  <div class="box">
+    <h3>04 PRD 覆盖与边界（如实）</h3>
+    <p style="margin:0 0 1.2mm 0;" class="small"><b>已完成：</b>P0/P1 全部功能（FR-1～FR-13）：素材接入、解析、规则/检索/判定、条款证据、多模态、图文一致性、申诉回流、多租户配额/成本/账单、规则热更新、训练与评测。</p>
+    <ul class="limits">
+      <li><b>召回天花板</b>：规则+检索对 535 条 gold-block 召回 93.01%，当前主要提升杠杆是规则/检索覆盖，而非替换模型。</li>
+      <li><b>ECS 不跑 headless 截图</b>：2C4G 默认 DOM-only 并标记 degraded；截图能力已在本地 Edge 实测通过，需要时换 4G+ 渲染节点开启。</li>
+      <li><b>ASR</b>：tiny 模型 CPU 可用但有同音字误差，作为补充证据；可升级 base/small。</li>
+      <li><b>7B 混合未切生产</b>：安全指标达标，但质量门禁未过，按原则保留 rule 后端。</li>
+      <li><b>可用性与身份</b>：单 ECS + RDS 基础版（无跨可用区 HA）；无 IdP，SSO 未接；TOTP 列已预留。</li>
+    </ul>
+  </div>
+  <div class="box">
+    <h3>05 交付物与证据索引</h3>
+    <p style="margin:0 0 1.2mm 0;" class="small">代码：Go Gateway / Java Control Plane / Python Pipeline 单仓交付；部署：systemd + nginx + 灰度/回滚脚本；文档：每个里程碑均有可复核验收报告。</p>
+    <div class="foot-links">
+      <span class="pill">docs/P2-验收总览.md</span>
+      <span class="pill">docs/M5-验收报告.md</span>
+      <span class="pill">docs/M6-验收报告.md</span>
+      <span class="pill">docs/M7-验收报告.md</span>
+      <span class="pill">docs/M8-验收报告.md</span>
+      <span class="pill">docs/M9-验收报告.md</span>
+      <span class="pill">docs/M10-验收报告.md</span>
+      <span class="pill">docs/M11-7B混合门禁报告.md</span>
+      <span class="pill">docs/M12-体验增强报告.md</span>
+    </div>
+    <p class="small" style="margin:1.2mm 0 0 0;"><b>可复现：</b>scripts/smoke-m1/m3/m7/m8/m9/m10/m12.ps1；<code>scripts/ci.ps1 -Full</code>；评测 JSON 已随仓库提交（含负结果与偏离记录）。</p>
+  </div>
+</div>
+
+<footer>
+  <div><b>数据说明：</b>本页所有数字来自自动化冒烟、真实云上环境和评测脚本的实际运行结果；未测项、负结果与环境偏离均在对应验收报告中逐项记录，不做美化。</div>
+  <div style="margin-top:1mm;">AdGuard P2 · 内部验收摘要 ｜ 生成日期 2026-11-26 ｜ 证据仓库：<b>adguard</b>（git 提交含 M0–M12）</div>
+</footer>
+
+</body>
+</html>
