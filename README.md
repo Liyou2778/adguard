@@ -92,3 +92,22 @@ cd services\pipeline-py
 
 CI 全绿 + 有测试 + 可演示 + README 更新 + ADR 记录 + TODO 登记。
 每个训练实验必须有可复现的配置文件与指标记录（模型、数据版本、超参、结果）。
+## 身份、申诉与账单（M8–M10）
+
+```bash
+# 管理员登录（首次启动由 BootstrapAdminRunner 创建，密码来自
+# ADGUARD_BOOTSTRAP_ADMIN_PASSWORD 或一次性打印在日志）
+TOKEN=$(curl -s -X POST localhost:8081/auth/login \
+  -H 'Content-Type: application/json' \
+  -d '{"username":"admin","password":"<bootstrap-password>"}' | jq -r .access_token)
+
+# 管理台（单页）：打开 http://<host>:8081/admin-ui/
+# 商家申诉：Authorization: Bearer <tenant-user-token>
+# 复核：PATCH /admin/appeals/{id}/review  -> 自动生成 feedback_pair（DPO 回流）
+# 账单：GET /admin/billing/summary?month=YYYY-MM
+#       GET /admin/billing/export.csv / export.pdf
+```
+
+生产鉴权环境变量（写入 `/opt/adguard/config/*.env`，不提交 git）：
+`ADGUARD_JWT_SECRET`、`ADGUARD_ADMIN_KEY`、`ADGUARD_AUTH_REQUIRED=true`（控制面）；
+`GATEWAY_JWT_SECRET`、`GATEWAY_API_KEY`、`GATEWAY_AUTH_REQUIRED=true`、`GATEWAY_QUOTA_ENABLED=true`（网关）。

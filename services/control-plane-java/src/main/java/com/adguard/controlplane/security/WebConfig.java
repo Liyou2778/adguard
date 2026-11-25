@@ -8,7 +8,6 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /** Registers the auth interceptor and security configuration properties. */
 @Configuration
-@EnableConfigurationProperties(SecurityProperties.class)
 @ConditionalOnProperty(prefix = "adguard.auth", name = "enabled", havingValue = "true", matchIfMissing = true)
 public class WebConfig implements WebMvcConfigurer {
 
