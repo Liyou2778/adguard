@@ -64,6 +64,12 @@ public class AuthInterceptor implements HandlerInterceptor {
         }
         AuthContext.set(principal);
 
+        if (principal.mustChangePassword()
+                && !path.equals("/auth/me") && !path.equals("/auth/password")) {
+            throw new ApiException(HttpStatus.FORBIDDEN, "PASSWORD_CHANGE_REQUIRED",
+                    "temporary password must be changed before using the API");
+        }
+
         if (path.startsWith("/admin/")) {
             if (isAdminOnly(path)) {
                 if (!principal.isAdmin()) {

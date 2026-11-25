@@ -1,0 +1,15 @@
+# ECS pipeline ASR optional dependencies (pinned for ctranslate2 / huggingface_hub)
+# Install with: /opt/adguard/venvs/pipeline/bin/pip install --no-cache-dir -r asr-requirements.txt
+faster-whisper==1.1.1
+ctranslate2==4.5.0
+tokenizers==0.20.3
+huggingface_hub==0.28.1
+av==13.1.0
+requests>=2.31
+setuptools==80.9.0
+filelock>=3.13
+fsspec>=2023.5.0
+tqdm>=4.66
+packaging>=20.9
+pyyaml>=6.0
+typing_extensions>=4.8

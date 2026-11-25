@@ -11,14 +11,20 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
-/** app_user persistence (M8 / FR-10 identity). */
+/** app_user persistence (M8 identity + M12 account security). */
 @Repository
 public class UserRepository {
 
     public record UserRow(String id, String tenantId, String username, String email, String passwordHash,
-                          String role, String status, Instant lastLoginAt, Instant createdAt) {
+                          String role, String status, boolean mustChangePassword,
+                          int failedLoginAttempts, Instant lockedUntil,
+                          Instant lastLoginAt, Instant createdAt) {
         public boolean active() {
             return "active".equals(status);
+        }
+
+        public boolean locked() {
+            return lockedUntil != null && lockedUntil.isAfter(Instant.now());
         }
     }
 
@@ -30,6 +36,9 @@ public class UserRepository {
             rs.getString("password_hash"),
             rs.getString("role"),
             rs.getString("status"),
+            rs.getBoolean("must_change_password"),
+            rs.getInt("failed_login_attempts"),
+            toInstant(rs.getTimestamp("locked_until")),
             toInstant(rs.getTimestamp("last_login_at")),
             toInstant(rs.getTimestamp("created_at")));
 
@@ -75,17 +84,18 @@ public class UserRepository {
         return count == null ? 0 : count;
     }
 
-    public void createAdmin(String username, String passwordHash, String email) {
-        jdbc.update("INSERT INTO app_user (id, tenant_id, username, email, password_hash, role, status) "
-                        + "VALUES (?, NULL, ?, NULLIF(?, ''), ?, 'admin', 'active')",
-                UUID.randomUUID().toString(), username, email, passwordHash);
+    public void createAdmin(String username, String passwordHash, String email, boolean mustChangePassword) {
+        jdbc.update("INSERT INTO app_user (id, tenant_id, username, email, password_hash, role, status, "
+                        + "must_change_password) VALUES (?, NULL, ?, NULLIF(?, ''), ?, 'admin', 'active', ?)",
+                UUID.randomUUID().toString(), username, email, passwordHash, mustChangePassword);
     }
 
-    public UserRow create(String tenantId, String username, String passwordHash, String role, String email) {
+    public UserRow create(String tenantId, String username, String passwordHash, String role, String email,
+                          boolean mustChangePassword) {
         String id = UUID.randomUUID().toString();
-        jdbc.update("INSERT INTO app_user (id, tenant_id, username, email, password_hash, role, status) "
-                        + "VALUES (?, ?, ?, NULLIF(?, ''), ?, ?, 'active')",
-                id, tenantId, username, email, passwordHash, role);
+        jdbc.update("INSERT INTO app_user (id, tenant_id, username, email, password_hash, role, status, "
+                        + "must_change_password) VALUES (?, ?, ?, NULLIF(?, ''), ?, ?, 'active', ?)",
+                id, tenantId, username, email, passwordHash, role, mustChangePassword);
         return findById(id).orElseThrow();
     }
 
@@ -93,8 +103,11 @@ public class UserRepository {
         jdbc.update("UPDATE app_user SET last_login_at = CURRENT_TIMESTAMP(3) WHERE id = ?", id);
     }
 
-    public void updatePassword(String id, String passwordHash) {
-        jdbc.update("UPDATE app_user SET password_hash = ? WHERE id = ?", passwordHash, id);
+    /** Replaces the password and clears/sets the forced-change flag. */
+    public void setPassword(String id, String passwordHash, boolean mustChangePassword) {
+        jdbc.update("UPDATE app_user SET password_hash = ?, must_change_password = ?, "
+                + "failed_login_attempts = 0, locked_until = NULL WHERE id = ?",
+                passwordHash, mustChangePassword, id);
     }
 
     public void updateRoleStatus(String id, String role, String status) {
@@ -113,6 +126,26 @@ public class UserRepository {
     public long countByTenant(String tenantId) {
         Long count = jdbc.queryForObject("SELECT COUNT(*) FROM app_user WHERE tenant_id = ?", Long.class, tenantId);
         return count == null ? 0 : count;
+    }
+
+    /** Increments the failure counter and locks the account once {@code maxAttempts} is reached. */
+    public LoginFailure recordLoginFailure(String id, int maxAttempts, int lockMinutes) {
+        jdbc.update("UPDATE app_user SET failed_login_attempts = failed_login_attempts + 1 WHERE id = ?", id);
+        UserRow user = findById(id).orElseThrow();
+        if (user.failedLoginAttempts() >= maxAttempts) {
+            jdbc.update("UPDATE app_user SET locked_until = DATE_ADD(CURRENT_TIMESTAMP(3), INTERVAL ? MINUTE) "
+                    + "WHERE id = ?", lockMinutes, id);
+            UserRow locked = findById(id).orElseThrow();
+            return new LoginFailure(locked.failedLoginAttempts(), locked.lockedUntil());
+        }
+        return new LoginFailure(user.failedLoginAttempts(), null);
+    }
+
+    public void resetLoginFailures(String id) {
+        jdbc.update("UPDATE app_user SET failed_login_attempts = 0, locked_until = NULL WHERE id = ?", id);
+    }
+
+    public record LoginFailure(int attempts, Instant lockedUntil) {
     }
 
     private static Instant toInstant(Timestamp timestamp) {

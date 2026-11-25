@@ -93,10 +93,38 @@ $username = 'smoke-' + (Get-Date -Format 'HHmmss')
 $create = Invoke-Api POST "$ControlPlane/admin/users" @{ username = $username; password = 'SmokePass123!'; role = 'owner'; tenant_id = $Tenant; email = "$username@example.com" } $adminToken
 Check 'admin creates tenant owner 201' ($create.Status -eq 201) "status=$($create.Status)"
 $merchantLogin = Invoke-Api POST "$ControlPlane/auth/login" @{ username = $username; password = 'SmokePass123!' }
-$merchantToken = if ($merchantLogin.Json) { $merchantLogin.Json.access_token } else { '' }
+$tempToken = if ($merchantLogin.Json) { $merchantLogin.Json.access_token } else { '' }
 Check 'merchant login 200 + tenant claim' ($merchantLogin.Status -eq 200 -and $merchantLogin.Json.user.tenant_id -eq $Tenant) "tenant=$($merchantLogin.Json.user.tenant_id)"
+Check 'admin-created user forced to change password' ($merchantLogin.Json.must_change_password -eq $true) "must_change=$($merchantLogin.Json.must_change_password)"
+$blocked = Invoke-Api GET "$ControlPlane/api/v1/appeals" $null $tempToken
+Check 'temp-password token blocked (PASSWORD_CHANGE_REQUIRED)' ($blocked.Status -eq 403 -and "$($blocked.Body)" -match 'PASSWORD_CHANGE_REQUIRED') "status=$($blocked.Status)"
+$pwChange = Invoke-Api POST "$ControlPlane/auth/password" @{ old_password = 'SmokePass123!'; new_password = 'SmokePass456!' } $tempToken
+Check 'change temporary password 204' ($pwChange.Status -eq 204) "status=$($pwChange.Status)"
+$stillBlocked = Invoke-Api GET "$ControlPlane/api/v1/appeals" $null $tempToken
+Check 'old token remains blocked until re-login' ($stillBlocked.Status -eq 403) "status=$($stillBlocked.Status)"
+$merchantLogin2 = Invoke-Api POST "$ControlPlane/auth/login" @{ username = $username; password = 'SmokePass456!' }
+$merchantToken = if ($merchantLogin2.Json) { $merchantLogin2.Json.access_token } else { '' }
+Check 're-login after password change (must_change=false)' ($merchantLogin2.Status -eq 200 -and $merchantLogin2.Json.must_change_password -eq $false) "must_change=$($merchantLogin2.Json.must_change_password)"
 $forbidden = Invoke-Api GET "$ControlPlane/admin/users" $null $merchantToken
 Check 'merchant -> /admin/users 403' ($forbidden.Status -eq 403) "status=$($forbidden.Status)"
+
+Write-Host ''
+Write-Host '[3b] Login lock after repeated failures'
+$lockUser = 'lock-' + (Get-Date -Format 'HHmmss')
+$lockCreate = Invoke-Api POST "$ControlPlane/admin/users" @{ username = $lockUser; password = 'LockPass123!'; role = 'member'; tenant_id = $Tenant } $adminToken
+Check 'admin creates lock-test user 201' ($lockCreate.Status -eq 201) "status=$($lockCreate.Status)"
+$lastStatus = 0
+for ($i = 0; $i -lt 5; $i++) {
+    $bad = Invoke-Api POST "$ControlPlane/auth/login" @{ username = $lockUser; password = 'wrong-password' }
+    $lastStatus = $bad.Status
+}
+Check '5th failed login returns ACCOUNT_LOCKED' ($lastStatus -eq 403 -and "$($bad.Body)" -match 'ACCOUNT_LOCKED') "status=$($lastStatus)"
+$correctWhileLocked = Invoke-Api POST "$ControlPlane/auth/login" @{ username = $lockUser; password = 'LockPass123!' }
+Check 'correct password rejected while locked' ($correctWhileLocked.Status -eq 403 -and "$($correctWhileLocked.Body)" -match 'ACCOUNT_LOCKED') "status=$($correctWhileLocked.Status)"
+$reset = Invoke-Api POST "$ControlPlane/admin/users/$($lockCreate.Json.id)/reset-password" @{ new_password = 'LockPass456!' } $adminToken
+Check 'admin reset unlocks account + temp password' ($reset.Status -eq 200 -and $reset.Json.must_change_password -eq $true) "status=$($reset.Status)"
+$relogin = Invoke-Api POST "$ControlPlane/auth/login" @{ username = $lockUser; password = 'LockPass456!' }
+Check 'login with reset temp password succeeds (must change)' ($relogin.Status -eq 200 -and $relogin.Json.must_change_password -eq $true) "status=$($relogin.Status)"
 
 Write-Host ''
 Write-Host '[4] Produce a real judgment (rule + text asset)'

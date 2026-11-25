@@ -49,11 +49,22 @@
 </head>
 <body>
 <div id="login">
-  <h2>AdGuard 管理台登录</h2>
-  <input id="loginUser" placeholder="用户名" autocomplete="username">
-  <input id="loginPass" type="password" placeholder="密码" autocomplete="current-password">
-  <button id="loginBtn" style="width:100%">登录</button>
-  <p class="muted" style="font-size:12px">商户申诉请使用租户账号登录；平台复核/管理员使用平台账号。</p>
+  <div id="loginForm">
+    <h2>AdGuard 管理台登录</h2>
+    <input id="loginUser" placeholder="用户名" autocomplete="username">
+    <input id="loginPass" type="password" placeholder="密码" autocomplete="current-password">
+    <button id="loginBtn" style="width:100%">登录</button>
+    <p class="muted" style="font-size:12px">商户申诉请使用租户账号登录；平台复核/管理员使用平台账号。</p>
+  </div>
+  <div id="pwChangeForm" style="display:none">
+    <h2>修改密码</h2>
+    <p class="muted" id="pwChangeHint" style="font-size:12px">临时密码必须先修改后才能继续使用。</p>
+    <input id="pwOld" type="password" placeholder="当前/临时密码">
+    <input id="pwNew" type="password" placeholder="新密码（8-72 位，建议字母+数字）">
+    <input id="pwNew2" type="password" placeholder="确认新密码">
+    <button id="pwChangeBtn" style="width:100%">提交修改</button>
+    <p class="muted" style="font-size:12px"><a href="#" id="pwCancel">返回登录</a></p>
+  </div>
 </div>
 
 <div id="app" style="display:none">
@@ -61,6 +72,7 @@
     <h1>AdGuard 合规审核 · 管理台</h1>
     <span class="spacer"></span>
     <span class="who" id="who"></span>
+    <button class="secondary" id="changePwBtn" style="margin-right:8px">改密</button>
     <button class="secondary" id="logoutBtn">退出</button>
   </header>
   <nav id="nav">
@@ -159,12 +171,36 @@ async function login() {
     const data = await api('/auth/login', { method: 'POST', body: { username: $('loginUser').value.trim(), password: $('loginPass').value } });
     state.token = data.access_token; state.user = data.user;
     sessionStorage.setItem('adg_token', state.token);
+    if (data.must_change_password) { state.forcedPwChange = true; showPwChange('临时密码必须先修改后才能继续使用。'); return; }
     showApp();
+  } catch (e) { msg(e.message, false); }
+}
+function showPwChange(hint) {
+  $('login').style.display = 'block'; $('app').style.display = 'none';
+  $('loginForm').style.display = 'none'; $('pwChangeForm').style.display = 'block';
+  $('pwChangeHint').textContent = hint;
+  $('pwOld').value = ''; $('pwNew').value = ''; $('pwNew2').value = '';
+}
+function showLoginForm() {
+  $('app').style.display = 'none'; $('login').style.display = 'block';
+  $('loginForm').style.display = 'block'; $('pwChangeForm').style.display = 'none';
+  $('pwOld').value = ''; $('pwNew').value = ''; $('pwNew2').value = '';
+}
+async function submitPwChange() {
+  const oldPassword = $('pwOld').value, newPassword = $('pwNew').value, confirm = $('pwNew2').value;
+  if (newPassword.length < 8 || newPassword.length > 72) { msg('新密码长度需 8-72 位', false); return; }
+  if (newPassword !== confirm) { msg('两次输入的新密码不一致', false); return; }
+  try {
+    await api('/auth/password', { method: 'POST', body: { old_password: oldPassword, new_password: newPassword } });
+    msg(state.forcedPwChange ? '密码已修改，请重新登录' : '密码已修改');
+    if (state.forcedPwChange) { state.forcedPwChange = false; logout(); showLoginForm(); }
+    else { showApp(); }
   } catch (e) { msg(e.message, false); }
 }
 function logout() {
   state.token = ''; state.user = null; sessionStorage.removeItem('adg_token');
   $('app').style.display = 'none'; $('login').style.display = 'block';
+  showLoginForm();
 }
 async function showApp() {
   try {
@@ -187,6 +223,12 @@ document.querySelectorAll('#nav button').forEach(b => b.addEventListener('click'
 $('loginBtn').addEventListener('click', login);
 $('loginPass').addEventListener('keydown', e => { if (e.key === 'Enter') login(); });
 $('logoutBtn').addEventListener('click', logout);
+$('pwChangeBtn').addEventListener('click', submitPwChange);
+$('changePwBtn').addEventListener('click', () => { state.forcedPwChange = false; showPwChange('修改登录密码'); });
+$('pwCancel').addEventListener('click', (e) => {
+  e.preventDefault();
+  if (state.forcedPwChange) { state.forcedPwChange = false; logout(); } else { showLoginForm(); }
+});
 
 function esc(v) { return String(v == null ? '' : v).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
 function pill(decision) { return '<span class="pill ' + esc(decision) + '">' + esc(decision) + '</span>'; }
@@ -240,7 +282,8 @@ async function loadUsers() {
     const rows = await api('/admin/users?limit=200' + (tenant ? '&tenantId=' + encodeURIComponent(tenant) : ''));
     $('userRows').innerHTML = rows.map(u =>
       '<tr><td class="kb">' + esc(u.id) + '</td><td>' + esc(u.username) + '</td><td>' + esc(u.tenant_id || '-') +
-      '</td><td>' + esc(u.role) + '</td><td>' + esc(u.status) + '</td><td class="muted">' + esc(u.last_login_at || '-') +
+      '</td><td>' + esc(u.role) + '</td><td>' + esc(u.status) +
+      (u.must_change_password ? ' <span class="pill manual">临时密码</span>' : '') + '</td><td class="muted">' + esc(u.last_login_at || '-') +
       '</td><td><button class="secondary" onclick="resetPassword(\'' + u.id + '\')">重置密码</button> ' +
       '<button class="secondary" onclick="toggleUser(\'' + u.id + '\',\'' + u.status + '\')">' + (u.status === 'active' ? '禁用' : '启用') + '</button></td></tr>').join('')
       || '<tr><td colspan="7" class="muted">暂无数据</td></tr>';

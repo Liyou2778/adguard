@@ -244,6 +244,11 @@ func authMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
 						"asset APIs require a tenant (owner/member) account", nil)
 					return
 				}
+				if claims.PwdChange {
+					writeError(w, r, http.StatusForbidden, "PASSWORD_CHANGE_REQUIRED",
+						"temporary password must be changed before using the API", nil)
+					return
+				}
 				tenant := strings.TrimSpace(claims.TenantID)
 				if !tenantPattern.MatchString(tenant) {
 					writeError(w, r, http.StatusUnauthorized, "INVALID_TENANT", "token tenant is invalid", nil)

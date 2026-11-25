@@ -21,10 +21,11 @@ public final class AuthDtos {
     }
 
     public record UserView(String id, String tenantId, String username, String email, String role,
-                           String status, String lastLoginAt, String createdAt) {
+                           String status, boolean mustChangePassword, String lastLoginAt, String createdAt) {
     }
 
-    public record TokenResponse(String accessToken, String tokenType, long expiresIn, UserView user) {
+    public record TokenResponse(String accessToken, String tokenType, long expiresIn,
+                                boolean mustChangePassword, UserView user) {
     }
 
     public record ChangePasswordRequest(

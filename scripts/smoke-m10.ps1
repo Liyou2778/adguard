@@ -57,6 +57,7 @@ function New-PromoImage([string]$Text) {
     $brush = [System.Drawing.Brushes]::Black
     $graphics.DrawString($Text, $font, $brush, 50, 80)
     $graphics.DrawString('限时抢购', (New-Object System.Drawing.Font('Microsoft YaHei', 26)), $brush, 80, 220)
+    $graphics.DrawString('批次 ' + (Get-Date -Format 'HHmmssfff'), (New-Object System.Drawing.Font('Microsoft YaHei', 16)), $brush, 50, 305)
     $graphics.Dispose()
     $stream = New-Object System.IO.MemoryStream
     $bitmap.Save($stream, [System.Drawing.Imaging.ImageFormat]::Png)
@@ -77,6 +78,7 @@ function Upload-Image([string]$Caption, [string]$ImageText, [string]$Tag) {
     & curl.exe -s -o NUL -X PUT -H "X-Tenant-Id: $Tenant" -H "X-API-Key: $ApiKey" -H 'Content-Type: application/octet-stream' --data-binary "@$tmp" "$Gateway/api/v1/assets/$assetId/chunks/0" | Out-Null
     Remove-Item $tmp -Force -ErrorAction SilentlyContinue
     $complete = Invoke-Api POST "$Gateway/api/v1/assets/$assetId/complete" $null '' $Tenant
+    if ($complete.Json -and $complete.Json.asset_id) { $assetId = $complete.Json.asset_id }
     for ($i = 0; $i -lt $PollSeconds; $i++) {
         Start-Sleep -Seconds 1
         $asset = Invoke-Api GET "$Gateway/api/v1/assets/$assetId" $null '' $Tenant

@@ -1,12 +1,17 @@
 package com.adguard.controlplane.security;
 
 /** Authenticated principal resolved from a JWT or the automation admin key. */
-public record AuthPrincipal(String userId, String tenantId, String username, String role) {
+public record AuthPrincipal(String userId, String tenantId, String username, String role,
+                            boolean mustChangePassword) {
 
     public static final String ROLE_OWNER = "owner";
     public static final String ROLE_MEMBER = "member";
     public static final String ROLE_REVIEWER = "reviewer";
     public static final String ROLE_ADMIN = "admin";
+
+    public AuthPrincipal(String userId, String tenantId, String username, String role) {
+        this(userId, tenantId, username, role, false);
+    }
 
     public boolean isAdmin() {
         return ROLE_ADMIN.equals(role);

@@ -42,7 +42,7 @@ public class BootstrapAdminRunner implements ApplicationRunner {
         boolean generated = configuredPassword == null || configuredPassword.isBlank();
         String password = generated ? randomPassword(20) : configuredPassword;
         userRepository.createAdmin(username, PasswordHasher.hash(password),
-                properties.getBootstrapAdminEmail());
+                properties.getBootstrapAdminEmail(), generated);
         if (generated) {
             log.warn("BOOTSTRAP ADMIN CREATED (shown once): username={} password={}", username, password);
         } else {

@@ -61,7 +61,7 @@ public class AdminUserService {
         }
         try {
             UserRepository.UserRow user = users.create(tenantId, request.username().trim(),
-                    PasswordHasher.hash(request.password()), role, request.email());
+                    PasswordHasher.hash(request.password()), role, request.email(), true);
             audit.record(tenantId, actor.userId(), actor.username(), "user.create", "user", user.id(),
                     Map.of("role", role));
             return AccountService.toViewStatic(user);
@@ -102,12 +102,13 @@ public class AdminUserService {
         if (password.length() < 8 || password.length() > 72) {
             throw ApiException.badRequest("INVALID_PASSWORD", "password must be 8-72 characters");
         }
-        users.updatePassword(userId, PasswordHasher.hash(password));
+        users.setPassword(userId, PasswordHasher.hash(password), true);
         audit.record(target.tenantId(), actor.userId(), actor.username(), "user.reset_password",
-                "user", userId, null);
+                "user", userId, java.util.Map.of("must_change_password", true));
         Map<String, Object> response = new java.util.LinkedHashMap<>();
         response.put("user_id", userId);
         response.put("generated", generated);
+        response.put("must_change_password", true);
         if (generated) {
             response.put("password", password);
         }

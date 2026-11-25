@@ -26,6 +26,10 @@ retrieval = ["torch>=2.5", "transformers>=4.46", "safetensors>=0.4"]
   # Multimodal parsing (M7 / FR-2): OCR + layout + landing-page extraction.
   parsing = ["rapidocr_onnxruntime>=1.4", "opencv-python-headless>=4.9", "pillow>=10",
              "beautifulsoup4>=4.12", "lxml>=5"]
+  # Optional landing-page headless screenshot (system Edge/Chrome or bundled Chromium).
+  render = ["playwright>=1.45"]
+  # Optional video speech-to-text (CPU tiny model by default).
+  asr = ["faster-whisper>=1.1.1"]
 
 [tool.setuptools.packages.find]
 where = ["src"]

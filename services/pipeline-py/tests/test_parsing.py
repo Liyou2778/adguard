@@ -133,4 +133,42 @@ def test_fetch_url_dom_text(monkeypatch):
     assert "全网最低价" in parsed.text
     assert parsed.meta["title"] == "测试落地页"
     assert parsed.degraded is True  # no headless render on this box
-    assert any("DOM text only" in w for w in parsed.warnings)
+    assert any(("ADGUARD_PLAYWRIGHT" in w) or ("DOM text" in w) for w in parsed.warnings)
+
+# --------------------------------------------------------------------------- ASR (video speech)
+from adguard_pipeline.parsing import asr  # noqa: E402
+
+
+def test_asr_disabled_raises(monkeypatch):
+    monkeypatch.delenv("ADGUARD_ASR_ENABLED", raising=False)
+    assert asr.enabled() is False
+    with pytest.raises(asr.AsrUnavailable):
+        asr.transcribe_bytes(b"RIFF....")
+
+
+def test_transcribe_video_appends_asr_text(monkeypatch):
+    monkeypatch.setenv("ADGUARD_ASR_ENABLED", "1")
+    monkeypatch.setattr(media, "_extract_audio", lambda _ffmpeg, _path: (b"wav-bytes", []))
+    monkeypatch.setattr(media.asr, "transcribe_bytes",
+                        lambda data, suffix=".wav": asr.AsrOutput(
+                            text="全网最低价，限时抢购", segments=[{"start": 0.0, "end": 2.1, "text": "全网最低价，限时抢购"}],
+                            language="zh"))
+    text, meta = media._transcribe_video("ffmpeg", Path("video.mp4"))
+    assert "全网最低价" in text
+    assert meta["enabled"] is True and meta["degraded"] is False
+    assert meta["segments"][0]["start"] == 0.0
+
+
+def test_transcribe_video_degrades_on_audio_failure(monkeypatch):
+    monkeypatch.setenv("ADGUARD_ASR_ENABLED", "1")
+    monkeypatch.setattr(media, "_extract_audio", lambda _ffmpeg, _path: (None, ["audio extraction failed"]))
+    text, meta = media._transcribe_video("ffmpeg", Path("video.mp4"))
+    assert text == ""
+    assert meta["degraded"] is True
+    assert any("audio extraction" in w for w in meta["warnings"])
+
+
+def test_transcribe_video_skipped_when_disabled(monkeypatch):
+    monkeypatch.delenv("ADGUARD_ASR_ENABLED", raising=False)
+    text, meta = media._transcribe_video("ffmpeg", Path("video.mp4"))
+    assert text == "" and meta["enabled"] is False

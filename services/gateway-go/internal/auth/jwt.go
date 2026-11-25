@@ -26,6 +26,9 @@ type Claims struct {
 	TenantID string `json:"tenant_id"`
 	Username string `json:"username"`
 	Role     string `json:"role"`
+	// PwdChange is true while the account still uses a temporary password; asset APIs are
+	// rejected until the user changes it (enterprise first-login policy).
+	PwdChange bool `json:"pwd_change"`
 	IssuedAt int64  `json:"iat"`
 	Expires  int64  `json:"exp"`
 }

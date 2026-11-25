@@ -61,6 +61,7 @@ public class JwtService {
         claims.put("tenant_id", principal.tenantId());
         claims.put("username", principal.username());
         claims.put("role", principal.role());
+        claims.put("pwd_change", principal.mustChangePassword());
         claims.put("iat", now);
         claims.put("exp", now + Math.max(1, properties.getTokenTtlHours()) * 3600L);
         try {
@@ -95,11 +96,13 @@ public class JwtService {
             if (exp instanceof Number number && number.longValue() < Instant.now().getEpochSecond()) {
                 return Optional.empty();
             }
+            boolean mustChange = Boolean.TRUE.equals(claims.get("pwd_change"));
             return Optional.of(new AuthPrincipal(
                     str(claims.get("sub")),
                     str(claims.get("tenant_id")),
                     str(claims.get("username")),
-                    str(claims.get("role"))));
+                    str(claims.get("role")),
+                    mustChange));
         } catch (Exception e) {
             return Optional.empty();
         }

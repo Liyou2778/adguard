@@ -17,7 +17,7 @@ import tempfile
 from dataclasses import dataclass
 from pathlib import Path
 
-from . import layout, ocr
+from . import asr, layout, ocr
 from .types import Element, Line, ParsedAsset
 
 
@@ -108,6 +108,45 @@ def _probe_duration(path: Path) -> float | None:
         return None
 
 
+
+def _extract_audio(ffmpeg: str, video_path: Path) -> tuple[bytes | None, list[str]]:
+    """Extract mono 16kHz wav audio for ASR. Returns (wav bytes, warnings)."""
+    if not asr.enabled():
+        return None, []
+    audio_path = video_path.with_suffix(".asr.wav")
+    try:
+        proc = subprocess.run(  # noqa: S603 - fixed binary, no shell
+            [ffmpeg, "-v", "error", "-y", "-i", str(video_path), "-vn", "-ac", "1",
+             "-ar", "16000", "-f", "wav", str(audio_path)],
+            capture_output=True, text=True, timeout=120, check=False,
+        )
+        if proc.returncode != 0 or not audio_path.exists():
+            return None, [f"audio extraction failed: {proc.stderr.strip()[:160]}"]
+        data = audio_path.read_bytes()
+        return (data or None), ([] if data else ["audio track is empty"])
+    except (OSError, subprocess.SubprocessError) as exc:
+        return None, [f"audio extraction failed: {exc}"]
+    finally:
+        audio_path.unlink(missing_ok=True)
+
+
+def _transcribe_video(ffmpeg: str, video_path: Path) -> tuple[str, dict]:
+    """Run optional ASR on the video; returns (appended text, asr meta)."""
+    if not asr.enabled():
+        return "", {"enabled": False, "reason": "ADGUARD_ASR_ENABLED not set"}
+    audio, warnings = _extract_audio(ffmpeg, video_path)
+    if not audio:
+        return "", {"enabled": True, "degraded": True, "warnings": warnings}
+    try:
+        output = asr.transcribe_bytes(audio, suffix=".wav")
+    except asr.AsrUnavailable as exc:
+        return "", {"enabled": True, "degraded": True, "warnings": warnings + [str(exc)]}
+    if not output.text.strip():
+        return "", {"enabled": True, "degraded": True, "warnings": warnings + ["no speech detected"]}
+    meta = {"enabled": True, "degraded": False, "engine": output.engine,
+            "language": output.language, "text": output.text,
+            "segments": output.segments[:20], "warnings": warnings + output.warnings}
+    return output.text, meta
 def parse_video(data: bytes, mime: str = "", filename: str = "") -> ParsedAsset:
     warnings: list[str] = []
     max_frames = int(os.environ.get("ADGUARD_VIDEO_MAX_FRAMES", "8"))
@@ -184,10 +223,16 @@ def parse_video(data: bytes, mime: str = "", filename: str = "") -> ParsedAsset:
                 all_lines.append(line)
                 kept += 1
             frame_meta.append({"frame": idx, "kept_lines": kept, "elements": len(elements)})
-        text = "\n".join(f"[frame {line.frame}] {line.text}" for line in all_lines if line.frame is not None)
+        ocr_text = "\n".join(f"[frame {line.frame}] {line.text}" for line in all_lines
+                             if line.frame is not None)
+        asr_text, asr_meta = _transcribe_video(ffmpeg, video_path)
+        if asr_text:
+            text = (ocr_text + "\n[asr] " + asr_text).strip()
+        else:
+            text = ocr_text
         degraded = not text.strip()
         if degraded:
-            warnings.append("OCR produced no text across extracted video frames")
+            warnings.append("OCR/ASR produced no text across extracted video frames")
         return ParsedAsset(
             asset_type="video",
             text=text,
@@ -202,6 +247,7 @@ def parse_video(data: bytes, mime: str = "", filename: str = "") -> ParsedAsset:
                 "frames": len(frames),
                 "duration_seconds": duration,
                 "frame_stats": frame_meta,
+                "asr": asr_meta,
             },
         )
     finally:
