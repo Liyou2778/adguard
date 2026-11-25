@@ -14,10 +14,14 @@
 | **M2** | 法规结构化：规则模型、7 类变形归一化、条款解析器 | ✅ 2026-11-22 通过（变体 1377/1377、条款 38/38）→ [验收报告](docs/M2-验收报告.md) |
 | **M3** | 知识工程：条款级多路检索、rerank、增量索引一致性、规则判定 | ✅ 2026-11-22 通过（material R@5 92.6%、冒烟 21/21）→ [验收报告](docs/M3-验收报告.md) |
 | **M4** | 模型工程：标注集、SFT、DPO、蒸馏、门禁 | ✅ SFT 门禁全过（recall 0.9973 / 误杀 0 / 错引 0 / JSON 100%）；DPO 负结果已归档；蒸馏链路 0.5B 验证 → [验收报告](docs/M4-验收报告.md) |
-| M3 | 知识工程：条款级切分、多路索引、rerank、增量索引、NDCG | 未开始 |
-| M4 | 模型工程：标注集、SFT、DPO、蒸馏、门禁 | 未开始 |
-| M5 | 推理与压测：vLLM / SGLang 对照、TTFT、成本 | 未开始 |
-| M6 | 上线：独立 ECS、规则灰度、模型灰度、回滚演练 | 规划完成 → [部署规划](docs/M6-独立ECS部署规划.md) |
+| **M5** | 推理压测 + 模型工程收尾：vLLM 压测、SFT/DPO/蒸馏门禁、混合判定 | ✅ 7B-SFT 服务端门禁 3/4（recall 1.0000 / 误杀 1.23% / 错引 0.80% / JSON 100%）；混合判定 PASS（0 次规则降级）；vLLM 7B c=32 13.89 req/s → [验收报告](docs/M5-验收报告.md) |
+| **M6** | 独立 ECS 上线：nginx 灰度、cutover、回滚演练 | ✅ 公网 healthz 200；灰度 10%/50%/100% 生效；cutover/rollback 通过 → [验收报告](docs/M6-验收报告.md) |
+| **M7** | 多模态解析：图片 OCR + bbox、视频关键帧、ClamAV、规则热更新 | ✅ 冒烟 19/19 → [验收报告](docs/M7-验收报告.md) |
+| **M8** | 用户/角色体系、申诉复核、feedback_pair（DPO 回流） | ✅ 冒烟 37/37（含 M12 账号安全增强）→ [验收报告](docs/M8-验收报告.md) |
+| **M9** | 配额/成本/账单：加权每日配额、429、CSV/PDF 账单 | ✅ 冒烟 18/18 → [验收报告](docs/M9-验收报告.md) |
+| **M10** | 图文一致性（FR-6）：caption + 规则/LLM 灰区 + bbox 证据 | ✅ 冒烟 18/18；30 对评测 recall 1.000 / FPR 0.000 → [验收报告](docs/M10-验收报告.md) |
+| **M11** | 真实 7B hybrid 门禁（AutoDL 48G + vLLM，535 条） | ⚠️ 安全指标全达标（误杀 0/错引 0/0 降级），召回 93.01%、人工率 5.23% 未过门禁 → 生产保留 rule → [报告](docs/M11-7B混合门禁报告.md) |
+| **M12** | 体验增强：首次改密/登录锁定、落地页截图、视频 ASR | ✅ 冒烟 16/16（ECS），M8 扩到 37/37；截图本地 e2e 通过 → [报告](docs/M12-体验增强报告.md) |
 
 ## 技术栈
 
@@ -26,7 +30,7 @@
 | 接入层 | 上传 / 分片 / 签名 URL / 限流 / 判定查询 | Go 1.27 |
 | 控制面 | 多租户 / 规则库 / 版本 / 快照 / 法规导入 / 审计 | Java 21 + Spring Boot 3.5 |
 | 知识面 | 归一化 / 变形对抗 / 条款解析 / 混合检索 / rerank / 规则判定 | Python 3.12（M2–M3 已交付） |
-| 模型面 | SFT / DPO / 蒸馏 / 评测 / vLLM·SGLang | Python（M4–M5） |
+| 模型面 | SFT / DPO / 蒸馏 / 评测 / vLLM·SGLang / 混合判定 | Python（M4–M12） |
 
 ## 本地开发
 
@@ -49,6 +53,8 @@ powershell -ExecutionPolicy Bypass -File .\scripts\run-gateway.ps1
 # 5) 验收冒烟
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m1.ps1   # 上传→判定闭环（回归）
 powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m3.ps1   # 条款级规则判定（M3）
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m8.ps1   # 账号/申诉/DPO 回流（M8）
+powershell -ExecutionPolicy Bypass -File .\scripts\smoke-m12.ps1  # 截图/ASR/账号安全（M12）
 ```
 
 > 详细步骤、curl 手工链路、常见问题见 [M1 运行手册](docs/M1-运行手册.md)。
