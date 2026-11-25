@@ -9,6 +9,7 @@ import (
 	"github.com/Liyou2778/adguard/services/gateway/internal/metrics"
 	"github.com/Liyou2778/adguard/services/gateway/internal/objectstore"
 	"github.com/Liyou2778/adguard/services/gateway/internal/queue"
+	"github.com/Liyou2778/adguard/services/gateway/internal/quota"
 	"github.com/Liyou2778/adguard/services/gateway/internal/store"
 	"github.com/go-chi/chi/v5"
 )
@@ -24,11 +25,13 @@ type Server struct {
 	logger  *slog.Logger
 	ready   func(ctx context.Context) error
 	limiter *rateLimiter
+	quota   *quota.Quota
 	handler http.Handler
 }
 
 func New(cfg *config.Config, st store.Store, objects objectstore.Store, producer queue.Producer,
-	m *metrics.Metrics, logger *slog.Logger, ready func(ctx context.Context) error) *Server {
+	m *metrics.Metrics, logger *slog.Logger, ready func(ctx context.Context) error,
+	quotas ...*quota.Quota) *Server {
 	if logger == nil {
 		logger = slog.Default()
 	}
@@ -44,6 +47,9 @@ func New(cfg *config.Config, st store.Store, objects objectstore.Store, producer
 		logger:  logger,
 		ready:   ready,
 		limiter: newRateLimiter(cfg.RateLimitPerMin),
+	}
+	if len(quotas) > 0 {
+		s.quota = quotas[0]
 	}
 	s.handler = s.routes()
 	return s
@@ -63,8 +69,7 @@ func (s *Server) routes() http.Handler {
 	r.Method(http.MethodGet, "/metrics", s.metrics.Handler())
 
 	r.Route("/api/v1", func(r chi.Router) {
-		r.Use(tenantMiddleware)
-		r.Use(apiKeyMiddleware(s.cfg.APIKey))
+		r.Use(authMiddleware(s.cfg))
 		r.Use(rateLimitMiddleware(s.limiter))
 
 		r.Post("/assets", s.createAsset)
@@ -73,6 +78,7 @@ func (s *Server) routes() http.Handler {
 		r.Get("/assets/{assetID}", s.getAsset)
 		r.Get("/assets/{assetID}/download-url", s.downloadURL)
 		r.Get("/judgments/{judgmentID}", s.getJudgment)
+		r.Get("/usage", s.usage)
 	})
 	return r
 }

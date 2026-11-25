@@ -95,6 +95,10 @@ func (s *Server) createAsset(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if s.enforceQuota(w, r, tenant, assetType) {
+		return
+	}
+
 	now := time.Now().UTC()
 	asset := &model.Asset{
 		ID:        uuid.NewString(),
@@ -146,6 +150,9 @@ func (s *Server) createLandingPage(w http.ResponseWriter, r *http.Request, tenan
 		return
 	}
 	finalURL := parsed.String()
+	if s.enforceQuota(w, r, tenant, "landing_page") {
+		return
+	}
 	sum := sha256.Sum256([]byte(finalURL))
 	digest := hex.EncodeToString(sum[:])
 
@@ -189,6 +196,41 @@ func (s *Server) createLandingPage(w http.ResponseWriter, r *http.Request, tenan
 	writeJSON(w, http.StatusAccepted, map[string]any{
 		"asset_id": asset.ID, "status": model.AssetStatusQueued, "deduped": false,
 	})
+}
+
+// enforceQuota reserves weighted quota points for one submission (FR-13). It writes the
+// rejection response itself and reports whether a response was written.
+func (s *Server) enforceQuota(w http.ResponseWriter, r *http.Request, tenant, assetType string) bool {
+	if s.quota == nil {
+		return false
+	}
+	reservation := s.quota.Reserve(r.Context(), tenant, assetType)
+	if reservation.Allowed {
+		return false
+	}
+	switch reservation.Reason {
+	case "TENANT_NOT_FOUND":
+		writeError(w, r, http.StatusForbidden, "TENANT_NOT_FOUND", "tenant is not provisioned", nil)
+	case "TENANT_DISABLED":
+		writeError(w, r, http.StatusForbidden, "TENANT_DISABLED", "tenant is disabled", nil)
+	case "QUOTA_EXCEEDED":
+		seconds := int(reservation.RetryAfter.Seconds())
+		if seconds < 1 {
+			seconds = 60
+		}
+		w.Header().Set("Retry-After", strconv.Itoa(seconds))
+		writeError(w, r, http.StatusTooManyRequests, "QUOTA_EXCEEDED",
+			"daily quota exceeded", map[string]any{
+				"used":        reservation.Used,
+				"limit":       reservation.Limit,
+				"weight":      reservation.Weight,
+				"retry_after": seconds,
+			})
+	default:
+		writeError(w, r, http.StatusTooManyRequests, "QUOTA_EXCEEDED",
+			"submission rejected by quota", nil)
+	}
+	return true
 }
 func (s *Server) uploadChunk(w http.ResponseWriter, r *http.Request) {
 	tenant := tenantFrom(r)

@@ -88,3 +88,51 @@ type AuditTask struct {
 	TenantID string `json:"tenant_id"`
 	Attempt  int    `json:"attempt"`
 }
+
+// --------------------------------------------------------------------------- M9 quota/billing
+// Tenant mirrors the control-plane tenant table (status + daily quota in weight points).
+type Tenant struct {
+	ID         string `json:"tenant_id"`
+	Name       string `json:"name"`
+	Status     string `json:"status"`
+	DailyQuota int    `json:"daily_quota"`
+}
+
+// JudgePrice is one row of billing_price for the judge service.
+type JudgePrice struct {
+	AssetType string `json:"asset_type"`
+	Weight    int    `json:"quota_weight"`
+	CostMicro int64  `json:"unit_price_micro"`
+}
+
+// UsageRecord is one ledger row written per judged asset (billing ground truth).
+type UsageRecord struct {
+	ID         string    `json:"id"`
+	TenantID   string    `json:"tenant_id"`
+	AssetID    string    `json:"asset_id"`
+	JudgmentID string    `json:"judgment_id"`
+	AssetType  string    `json:"asset_type"`
+	Weight     int       `json:"weight"`
+	CostMicro  int64     `json:"cost_micro"`
+	BilledDate time.Time `json:"billed_date"`
+	CreatedAt  time.Time `json:"created_at"`
+}
+
+// UsageItem is an aggregate row for the merchant usage endpoint.
+type UsageItem struct {
+	AssetType string `json:"asset_type"`
+	Calls     int64  `json:"calls"`
+	Weight    int64  `json:"weight"`
+	CostMicro int64  `json:"cost_micro"`
+}
+
+// UsageSummary aggregates usage_records for one tenant and date range.
+type UsageSummary struct {
+	TenantID  string      `json:"tenant_id"`
+	From      string      `json:"from"`
+	To        string      `json:"to"`
+	Calls     int64       `json:"calls"`
+	Weight    int64       `json:"weight"`
+	CostMicro int64       `json:"cost_micro"`
+	Items     []UsageItem `json:"items"`
+}

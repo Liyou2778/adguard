@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"log/slog"
+	"time"
 
 	"github.com/Liyou2778/adguard/services/gateway/internal/judge"
 	"github.com/Liyou2778/adguard/services/gateway/internal/metrics"
@@ -52,7 +53,11 @@ func (w *Worker) ProcessOne(ctx context.Context, task model.AuditTask) error {
 		return nil
 	}
 	if existing, err := w.store.LatestJudgment(ctx, task.TenantID, task.AssetID); err == nil && existing != nil {
-		// Redelivery after a successful judgment: finish the state machine, emit nothing.
+		// Redelivery after a successful judgment: finish the state machine, but make sure the
+		// billing ledger row exists (M9) in case the previous attempt crashed between the two.
+		if usageErr := w.recordUsage(ctx, asset, existing); usageErr != nil {
+			w.logger.Warn("failed to backfill usage record", "asset_id", task.AssetID, "err", usageErr)
+		}
 		_ = w.store.MarkAssetStatus(ctx, task.TenantID, task.AssetID, model.AssetStatusJudged)
 		return nil
 	}
@@ -70,9 +75,20 @@ func (w *Worker) ProcessOne(ctx context.Context, task model.AuditTask) error {
 	if judgment.ID == "" {
 		judgment.ID = uuid.NewString()
 	}
+	// M9: record the price-list cost on the judgment (cost attribution for FR-13 billing).
+	if price, priceErr := w.store.PriceForJudge(ctx, asset.Type); priceErr != nil {
+		w.logger.Warn("price lookup failed; keeping judge-reported cost",
+			"asset_id", task.AssetID, "err", priceErr)
+	} else if price.CostMicro > 0 {
+		judgment.CostMicro = price.CostMicro
+	}
 	if err := w.store.CreateJudgment(ctx, judgment); err != nil {
 		w.failOrRetry(ctx, task, err)
 		return nil
+	}
+	if err := w.recordUsage(ctx, asset, judgment); err != nil {
+		// The judgment is authoritative; a ledger write failure must not flip it to failed.
+		w.logger.Warn("failed to record usage", "asset_id", task.AssetID, "err", err)
 	}
 	if err := w.store.MarkAssetStatus(ctx, task.TenantID, task.AssetID, model.AssetStatusJudged); err != nil {
 		return err
@@ -100,4 +116,43 @@ func (w *Worker) failOrRetry(ctx context.Context, task model.AuditTask, cause er
 	if err := w.store.MarkAssetStatus(ctx, task.TenantID, task.AssetID, model.AssetStatusFailed); err != nil {
 		w.logger.Error("failed to mark asset as failed", "asset_id", task.AssetID, "err", err)
 	}
+}
+
+// recordUsage writes the billing ledger row for a judged asset exactly once.
+func (w *Worker) recordUsage(ctx context.Context, asset *model.Asset, judgment *model.Judgment) error {
+	if asset == nil || judgment == nil || judgment.ID == "" {
+		return nil
+	}
+	exists, err := w.store.UsageExists(ctx, judgment.ID)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return nil
+	}
+	price, err := w.store.PriceForJudge(ctx, asset.Type)
+	if err != nil {
+		price = model.JudgePrice{AssetType: asset.Type, Weight: 1, CostMicro: judgment.CostMicro}
+	}
+	weight := price.Weight
+	if weight <= 0 {
+		weight = 1
+	}
+	cost := judgment.CostMicro
+	if cost == 0 {
+		cost = price.CostMicro
+	}
+	now := time.Now().UTC()
+	usage := &model.UsageRecord{
+		ID:         uuid.NewString(),
+		TenantID:   asset.TenantID,
+		AssetID:    asset.ID,
+		JudgmentID: judgment.ID,
+		AssetType:  asset.Type,
+		Weight:     weight,
+		CostMicro:  cost,
+		BilledDate: now.Truncate(24 * time.Hour),
+		CreatedAt:  now,
+	}
+	return w.store.RecordUsage(ctx, usage)
 }

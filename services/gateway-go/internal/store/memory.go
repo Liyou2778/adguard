@@ -19,6 +19,9 @@ type Memory struct {
 	sessions  map[string]*model.UploadSession
 	chunks    map[string]map[int]int64 // key tenant|asset -> index -> size
 	judgments []*model.Judgment
+	tenants   map[string]*model.Tenant
+	prices    map[string]model.JudgePrice // key asset type
+	usage     []*model.UsageRecord
 }
 
 func NewMemory() *Memory {
@@ -27,6 +30,16 @@ func NewMemory() *Memory {
 		byDigest: map[string]string{},
 		sessions: map[string]*model.UploadSession{},
 		chunks:   map[string]map[int]int64{},
+		tenants: map[string]*model.Tenant{
+			"demo-platform": {ID: "demo-platform", Name: "Demo Platform", Status: "active", DailyQuota: 100000},
+			"other-tenant":  {ID: "other-tenant", Name: "Other Tenant", Status: "active", DailyQuota: 10000},
+		},
+		prices: map[string]model.JudgePrice{
+			"text":         {AssetType: "text", Weight: 1, CostMicro: 100},
+			"image":        {AssetType: "image", Weight: 2, CostMicro: 500},
+			"video":        {AssetType: "video", Weight: 5, CostMicro: 3000},
+			"landing_page": {AssetType: "landing_page", Weight: 3, CostMicro: 1000},
+		},
 	}
 }
 
@@ -243,4 +256,77 @@ func (m *Memory) JudgmentsSorted() []*model.Judgment {
 	copy(out, m.judgments)
 	sort.Slice(out, func(i, j int) bool { return out[i].CreatedAt.Before(out[j].CreatedAt) })
 	return out
+}
+
+// --------------------------------------------------------------------------- M9 quota/billing
+func (m *Memory) GetTenant(_ context.Context, tenantID string) (*model.Tenant, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	tenant, ok := m.tenants[tenantID]
+	if !ok {
+		return nil, ErrNotFound
+	}
+	copyT := *tenant
+	return &copyT, nil
+}
+
+func (m *Memory) PriceForJudge(_ context.Context, assetType string) (model.JudgePrice, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	if price, ok := m.prices[assetType]; ok {
+		return price, nil
+	}
+	return model.JudgePrice{AssetType: assetType, Weight: 1, CostMicro: 100}, nil
+}
+
+func (m *Memory) RecordUsage(_ context.Context, usage *model.UsageRecord) error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	copyU := *usage
+	m.usage = append(m.usage, &copyU)
+	return nil
+}
+
+func (m *Memory) UsageExists(_ context.Context, judgmentID string) (bool, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	for _, usage := range m.usage {
+		if usage.JudgmentID == judgmentID {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
+func (m *Memory) UsageSummary(_ context.Context, tenantID string, from, to time.Time) (*model.UsageSummary, error) {
+	m.mu.RLock()
+	defer m.mu.RUnlock()
+	summary := &model.UsageSummary{TenantID: tenantID, From: from.Format("2006-01-02"),
+		To: to.Format("2006-01-02"), Items: make([]model.UsageItem, 0)}
+	byType := map[string]*model.UsageItem{}
+	for _, usage := range m.usage {
+		if usage.TenantID != tenantID {
+			continue
+		}
+		day := usage.BilledDate.Format("2006-01-02")
+		if day < summary.From || day > summary.To {
+			continue
+		}
+		item, ok := byType[usage.AssetType]
+		if !ok {
+			item = &model.UsageItem{AssetType: usage.AssetType}
+			byType[usage.AssetType] = item
+		}
+		item.Calls++
+		item.Weight += int64(usage.Weight)
+		item.CostMicro += usage.CostMicro
+		summary.Calls++
+		summary.Weight += int64(usage.Weight)
+		summary.CostMicro += usage.CostMicro
+	}
+	for _, item := range byType {
+		summary.Items = append(summary.Items, *item)
+	}
+	sort.Slice(summary.Items, func(i, j int) bool { return summary.Items[i].AssetType < summary.Items[j].AssetType })
+	return summary, nil
 }

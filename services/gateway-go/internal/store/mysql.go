@@ -276,6 +276,79 @@ type scanner interface {
 	Scan(dest ...any) error
 }
 
+// --------------------------------------------------------------------------- M9 quota/billing
+func (s *MySQL) GetTenant(ctx context.Context, tenantID string) (*model.Tenant, error) {
+	var tenant model.Tenant
+	err := s.db.QueryRowContext(ctx, `SELECT id, name, status, daily_quota FROM tenant WHERE id = ?`,
+		tenantID).Scan(&tenant.ID, &tenant.Name, &tenant.Status, &tenant.DailyQuota)
+	if errors.Is(err, sql.ErrNoRows) {
+		return nil, ErrNotFound
+	}
+	if err != nil {
+		return nil, err
+	}
+	return &tenant, nil
+}
+
+func (s *MySQL) PriceForJudge(ctx context.Context, assetType string) (model.JudgePrice, error) {
+	price := model.JudgePrice{AssetType: assetType, Weight: 1, CostMicro: 100}
+	err := s.db.QueryRowContext(ctx, `SELECT quota_weight, unit_price_micro FROM billing_price
+		WHERE code = ?`, "judge."+assetType).Scan(&price.Weight, &price.CostMicro)
+	if errors.Is(err, sql.ErrNoRows) {
+		// Safe default for an asset type that has no price row yet; never blocks judgment.
+		return price, nil
+	}
+	if err != nil {
+		return model.JudgePrice{}, err
+	}
+	return price, nil
+}
+
+func (s *MySQL) RecordUsage(ctx context.Context, usage *model.UsageRecord) error {
+	_, err := s.db.ExecContext(ctx, `INSERT INTO usage_record
+		(id, tenant_id, asset_id, judgment_id, asset_type, weight, cost_micro, billed_date, created_at)
+		VALUES (?, ?, ?, NULLIF(?,''), ?, ?, ?, ?, ?)`,
+		usage.ID, usage.TenantID, usage.AssetID, usage.JudgmentID, usage.AssetType, usage.Weight,
+		usage.CostMicro, usage.BilledDate.Format("2006-01-02"), usage.CreatedAt)
+	return err
+}
+
+func (s *MySQL) UsageExists(ctx context.Context, judgmentID string) (bool, error) {
+	if judgmentID == "" {
+		return false, nil
+	}
+	var count int
+	if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM usage_record WHERE judgment_id = ?`,
+		judgmentID).Scan(&count); err != nil {
+		return false, err
+	}
+	return count > 0, nil
+}
+
+func (s *MySQL) UsageSummary(ctx context.Context, tenantID string, from, to time.Time) (*model.UsageSummary, error) {
+	summary := &model.UsageSummary{TenantID: tenantID, From: from.Format("2006-01-02"),
+		To: to.Format("2006-01-02"), Items: make([]model.UsageItem, 0)}
+	rows, err := s.db.QueryContext(ctx, `SELECT asset_type, COUNT(*), COALESCE(SUM(weight),0),
+		COALESCE(SUM(cost_micro),0) FROM usage_record
+		WHERE tenant_id = ? AND billed_date BETWEEN ? AND ?
+		GROUP BY asset_type ORDER BY asset_type`,
+		tenantID, from.Format("2006-01-02"), to.Format("2006-01-02"))
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	for rows.Next() {
+		var item model.UsageItem
+		if err := rows.Scan(&item.AssetType, &item.Calls, &item.Weight, &item.CostMicro); err != nil {
+			return nil, err
+		}
+		summary.Items = append(summary.Items, item)
+		summary.Calls += item.Calls
+		summary.Weight += item.Weight
+		summary.CostMicro += item.CostMicro
+	}
+	return summary, rows.Err()
+}
 func scanAsset(row scanner) (*model.Asset, error) {
 	var a model.Asset
 	err := row.Scan(&a.ID, &a.TenantID, &a.Type, &a.Status, &a.ObjectKey, &a.SourceURL,

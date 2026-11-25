@@ -19,6 +19,7 @@ import (
 	"github.com/Liyou2778/adguard/services/gateway/internal/objectstore"
 	"github.com/Liyou2778/adguard/services/gateway/internal/pipeline"
 	"github.com/Liyou2778/adguard/services/gateway/internal/queue"
+	"github.com/Liyou2778/adguard/services/gateway/internal/quota"
 	"github.com/Liyou2778/adguard/services/gateway/internal/snapshot"
 	"github.com/Liyou2778/adguard/services/gateway/internal/store"
 	"github.com/Liyou2778/adguard/services/gateway/internal/worker"
@@ -129,7 +130,10 @@ func run(logger *slog.Logger) error {
 		}
 		return nil
 	}
-	server := httpapi.New(cfg, st, objects, streams, m, logger, ready)
+	quotaLimiter := quota.New(rdb, st, cfg.QuotaEnabled, logger)
+	logger.Info("quota enforcement", "enabled", cfg.QuotaEnabled, "auth_required", cfg.AuthRequired,
+		"service_api_key", cfg.APIKey != "")
+	server := httpapi.New(cfg, st, objects, streams, m, logger, ready, quotaLimiter)
 	httpServer := &http.Server{
 		Addr:              cfg.HTTPAddr,
 		Handler:           server.Handler(),

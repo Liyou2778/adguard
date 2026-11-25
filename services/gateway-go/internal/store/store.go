@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"errors"
+	"time"
 
 	"github.com/Liyou2778/adguard/services/gateway/internal/model"
 )
@@ -34,6 +35,12 @@ type Store interface {
 	MarkAssetQueued(ctx context.Context, tenantID, assetID, objectKey, digest string) error
 	MarkAssetStatus(ctx context.Context, tenantID, assetID, status string) error
 	MarkAssetDuplicate(ctx context.Context, tenantID, assetID, existingAssetID string) error
+
+	GetTenant(ctx context.Context, tenantID string) (*model.Tenant, error)
+	PriceForJudge(ctx context.Context, assetType string) (model.JudgePrice, error)
+	RecordUsage(ctx context.Context, usage *model.UsageRecord) error
+	UsageExists(ctx context.Context, judgmentID string) (bool, error)
+	UsageSummary(ctx context.Context, tenantID string, from, to time.Time) (*model.UsageSummary, error)
 
 	CreateJudgment(ctx context.Context, judgment *model.Judgment) error
 	GetJudgment(ctx context.Context, tenantID, judgmentID string) (*model.Judgment, error)

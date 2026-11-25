@@ -43,6 +43,14 @@ type Config struct {
 	APIKey          string
 	RateLimitPerMin int
 
+	// M8 security hardening: production requires either a user JWT (tenant users) or the
+	// service X-API-Key (automation). JWT secret is shared with the Java control plane.
+	AuthRequired bool
+	JWTSecret    string
+
+	// M9 quota: daily weighted quota from tenant.daily_quota, counted in Redis.
+	QuotaEnabled bool
+
 	WorkerEnabled bool
 	WorkerGroup   string
 	WorkerName    string
@@ -76,6 +84,9 @@ func Load() (*Config, error) {
 		PipelineTimeout:     envDuration("GATEWAY_PIPELINE_TIMEOUT", 10*time.Second),
 		APIKey:              env("GATEWAY_API_KEY", ""),
 		RateLimitPerMin:     envInt("GATEWAY_RATE_LIMIT_PER_MIN", 600),
+		AuthRequired:        envBool("GATEWAY_AUTH_REQUIRED", false),
+		JWTSecret:           env("GATEWAY_JWT_SECRET", ""),
+		QuotaEnabled:        envBool("GATEWAY_QUOTA_ENABLED", true),
 		WorkerEnabled:       envBool("GATEWAY_WORKER_ENABLED", true),
 		WorkerGroup:         env("GATEWAY_WORKER_GROUP", "judge-workers"),
 		WorkerName:          env("GATEWAY_WORKER_NAME", hostname()),

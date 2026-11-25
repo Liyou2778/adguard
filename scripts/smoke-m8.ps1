@@ -1,5 +1,6 @@
 ﻿# M8 (FR-10) acceptance smoke: identity/roles, merchant appeal -> reviewer decision -> feedback pair.
 param(
+    [string]$ApiKey = '',
     [string]$AdminKey = '',
     [string]$Gateway = 'http://127.0.0.1:8080',
     [string]$ControlPlane = 'http://127.0.0.1:8081',
@@ -21,6 +22,7 @@ function Invoke-Api([string]$Method, [string]$Url, $Body = $null, [string]$Token
     $headers = @{}
     if ($Token) { $headers['Authorization'] = "Bearer $Token" }
     if ($AdminKey -and -not $Anonymous) { $headers['X-Admin-Key'] = $AdminKey }
+    if ($ApiKey -and -not $Anonymous) { $headers['X-API-Key'] = $ApiKey }
     if ($TenantHeader) { $headers['X-Tenant-Id'] = $TenantHeader }
     $resp = $null; $content = ''
     try {
@@ -30,7 +32,12 @@ function Invoke-Api([string]$Method, [string]$Url, $Body = $null, [string]$Token
         $content = $resp.Content
     } catch {
         $resp = $_.Exception.Response
-        if ($null -ne $resp) {
+        $content = ''
+        # PowerShell 5.1 does not expose the body through GetResponseStream() for failed
+        # requests; ErrorDetails.Message is the reliable channel (same handling as smoke-m1).
+        if ($null -ne $_.ErrorDetails -and $_.ErrorDetails.Message) {
+            $content = [string]$_.ErrorDetails.Message
+        } elseif ($null -ne $resp) {
             try { $sr = New-Object System.IO.StreamReader($resp.GetResponseStream()); $content = $sr.ReadToEnd(); $sr.Close() } catch {}
         }
     }
@@ -113,7 +120,7 @@ $assetId = if ($init.Json) { $init.Json.asset_id } else { '' }
 Check 'asset created' ($init.Status -eq 201) "asset=$assetId"
 $tmp = Join-Path $env:TEMP "m8-$assetId.bin"
 [System.IO.File]::WriteAllBytes($tmp, $textBytes)
-& curl.exe -s -o NUL -X PUT -H "X-Tenant-Id: $Tenant" -H 'Content-Type: application/octet-stream' --data-binary "@$tmp" "$Gateway/api/v1/assets/$assetId/chunks/0" | Out-Null
+& curl.exe -s -o NUL -X PUT -H "X-Tenant-Id: $Tenant" -H "X-API-Key: $ApiKey" -H 'Content-Type: application/octet-stream' --data-binary "@$tmp" "$Gateway/api/v1/assets/$assetId/chunks/0" | Out-Null
 Remove-Item $tmp -Force -ErrorAction SilentlyContinue
 $complete = Invoke-Api POST "$Gateway/api/v1/assets/$assetId/complete" $null '' $Tenant
 Check 'asset upload completed (202)' ($complete.Status -eq 202) "status=$($complete.Status)"

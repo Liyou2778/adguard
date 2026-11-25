@@ -10,6 +10,7 @@
 # Exit code 0 = all checks passed.
 
 param(
+    [string]$ApiKey = '',
     [string]$AdminKey = '',
     [string]$Gateway = 'http://127.0.0.1:8080',
     [string]$ControlPlane = 'http://127.0.0.1:8081',
@@ -35,6 +36,7 @@ function Invoke-Json([string]$Method, [string]$Url, $Body = $null, [string]$Tena
     $headers = @{}
     if ($TenantId) { $headers['X-Tenant-Id'] = $TenantId }
     if ($AdminKey) { $headers['X-Admin-Key'] = $AdminKey }
+    if ($ApiKey) { $headers['X-API-Key'] = $ApiKey }
     $params = @{ Method = $Method; Uri = $Url; Headers = $headers; UseBasicParsing = $true; TimeoutSec = 60 }
     if ($null -ne $Body -and "$Body" -ne '') {
         $params.Body = ($Body | ConvertTo-Json -Depth 10)
@@ -84,7 +86,7 @@ function New-TextAsset([string]$Content, [string]$AssetType = 'text') {
     $tmp = Join-Path $env:TEMP ("adguard-smoke3-{0}.bin" -f ([guid]::NewGuid().ToString('N')))
     $script:tmpFiles += $tmp
     [System.IO.File]::WriteAllBytes($tmp, $bytes)
-    $code = & curl.exe -s -o NUL -w "%{http_code}" -X PUT -H "X-Tenant-Id: $Tenant" `
+    $code = & curl.exe -s -o NUL -w "%{http_code}" -X PUT -H "X-Tenant-Id: $Tenant" -H "X-API-Key: $ApiKey" `
         -H "Content-Type: application/octet-stream" --data-binary "@$tmp" `
         "$Gateway/api/v1/assets/$assetId/chunks/0"
     if ("$code" -ne '204') { throw "upload chunk failed: $code" }

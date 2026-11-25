@@ -1,6 +1,7 @@
 ﻿# AdGuard M7 acceptance smoke test: multimodal parsing (image OCR/bbox), landing-page URL,
 # antivirus quarantine. Runs against a local or cloud gateway.
 param(
+    [string]$ApiKey = '',
     [string]$AdminKey = '',
     [string]$Gateway = 'http://127.0.0.1:8080',
     [string]$ControlPlane = 'http://127.0.0.1:8081',
@@ -23,6 +24,7 @@ function Invoke-Json([string]$Method, [string]$Url, $Body = $null, [string]$Tena
     $headers = @{}
     if ($TenantId) { $headers['X-Tenant-Id'] = $TenantId }
     if ($AdminKey) { $headers['X-Admin-Key'] = $AdminKey }
+    if ($ApiKey) { $headers['X-API-Key'] = $ApiKey }
     $json = $null
     if ($null -ne $Body) { $json = $Body | ConvertTo-Json -Depth 8 -Compress }
     $body = ''
@@ -70,7 +72,7 @@ function Upload-Asset([string]$Type, [string]$Filename, [string]$Mime, [byte[]]$
         $tmp = Join-Path $env:TEMP ("adguard-m7-{0}.bin" -f $assetId)
         [System.IO.File]::WriteAllBytes($tmp, $Bytes)
         try {
-            & curl.exe -s -o NUL -X PUT -H "X-Tenant-Id: $Tenant" -H 'Content-Type: application/octet-stream' `
+            & curl.exe -s -o NUL -X PUT -H "X-Tenant-Id: $Tenant" -H "X-API-Key: $ApiKey" -H 'Content-Type: application/octet-stream' `
                 --data-binary "@$tmp" "$Gateway/api/v1/assets/$assetId/chunks/0" | Out-Null
         } finally {
             Remove-Item $tmp -Force -ErrorAction SilentlyContinue

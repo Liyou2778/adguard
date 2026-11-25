@@ -10,6 +10,8 @@ import (
 	"sync"
 	"time"
 
+	"github.com/Liyou2778/adguard/services/gateway/internal/auth"
+	"github.com/Liyou2778/adguard/services/gateway/internal/config"
 	"github.com/Liyou2778/adguard/services/gateway/internal/metrics"
 	"github.com/google/uuid"
 )
@@ -217,4 +219,67 @@ func rateLimitMiddleware(l *rateLimiter) func(http.Handler) http.Handler {
 
 func itoa(n int) string {
 	return strconv.Itoa(n)
+}
+
+// authMiddleware is the production identity gate (M8 hardening):
+//   - user JWT from the control plane (tenant users only; admin/reviewer tokens are rejected
+//     for asset APIs), or
+//   - the service X-API-Key (automation/smoke) with an explicit X-Tenant-Id.
+//
+// When neither auth mode is configured (local development), the legacy tenant header is
+// accepted so existing tooling keeps working; ECS sets GATEWAY_AUTH_REQUIRED=true.
+func authMiddleware(cfg *config.Config) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			authorization := r.Header.Get("Authorization")
+			if strings.HasPrefix(authorization, "Bearer ") {
+				claims, err := auth.Verify(strings.TrimSpace(authorization[len("Bearer "):]), cfg.JWTSecret)
+				if err != nil {
+					writeError(w, r, http.StatusUnauthorized, "UNAUTHORIZED",
+						"invalid or expired access token", nil)
+					return
+				}
+				if !claims.TenantUser() {
+					writeError(w, r, http.StatusForbidden, "TENANT_REQUIRED",
+						"asset APIs require a tenant (owner/member) account", nil)
+					return
+				}
+				tenant := strings.TrimSpace(claims.TenantID)
+				if !tenantPattern.MatchString(tenant) {
+					writeError(w, r, http.StatusUnauthorized, "INVALID_TENANT", "token tenant is invalid", nil)
+					return
+				}
+				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxTenant, tenant)))
+				return
+			}
+			if cfg.APIKey != "" && r.Header.Get("X-API-Key") == cfg.APIKey {
+				tenant := strings.TrimSpace(r.Header.Get("X-Tenant-Id"))
+				if !tenantPattern.MatchString(tenant) {
+					writeError(w, r, http.StatusBadRequest, "MISSING_TENANT",
+						"X-Tenant-Id header is required with the service API key", nil)
+					return
+				}
+				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxTenant, tenant)))
+				return
+			}
+			if !cfg.AuthRequired && cfg.APIKey == "" {
+				// Local development: legacy tenant header mode.
+				tenant := strings.TrimSpace(r.Header.Get("X-Tenant-Id"))
+				if tenant == "" {
+					writeError(w, r, http.StatusBadRequest, "MISSING_TENANT",
+						"X-Tenant-Id header is required", nil)
+					return
+				}
+				if !tenantPattern.MatchString(tenant) {
+					writeError(w, r, http.StatusBadRequest, "INVALID_TENANT",
+						"tenant id must match ^[a-z0-9][a-z0-9_-]{2,63}$", nil)
+					return
+				}
+				next.ServeHTTP(w, r.WithContext(context.WithValue(r.Context(), ctxTenant, tenant)))
+				return
+			}
+			writeError(w, r, http.StatusUnauthorized, "UNAUTHORIZED",
+				"authentication required (Bearer token or X-API-Key)", nil)
+		})
+	}
 }

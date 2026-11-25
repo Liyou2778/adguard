@@ -9,6 +9,7 @@
 # Exit code 0 = all checks passed.
 
 param(
+    [string]$ApiKey = '',
     [string]$AdminKey = '',
     [string]$Gateway = 'http://127.0.0.1:8080',
     [string]$ControlPlane = 'http://127.0.0.1:8081',
@@ -34,6 +35,7 @@ function Invoke-Json([string]$Method, [string]$Url, $Body = $null, [string]$Tena
     $headers = @{}
     if ($TenantId) { $headers['X-Tenant-Id'] = $TenantId }
     if ($AdminKey) { $headers['X-Admin-Key'] = $AdminKey }
+    if ($ApiKey) { $headers['X-API-Key'] = $ApiKey }
     $params = @{ Method = $Method; Uri = $Url; Headers = $headers; UseBasicParsing = $true; TimeoutSec = 60 }
     if ($null -ne $Body -and "$Body" -ne '') {
         $params.Body = ($Body | ConvertTo-Json -Depth 10)
@@ -165,14 +167,14 @@ for ($i = 0; $i -lt $totalChunks; $i++) {
     $tmp = Join-Path $env:TEMP ("adguard-chunk-{0}-{1}.bin" -f $i, $PID)
     $script:tmpFiles += $tmp
     New-ChunkFile $tmp $bytes $offset $length | Out-Null
-    $code = & curl.exe -s -o NUL -w "%{http_code}" -X PUT -H "X-Tenant-Id: $Tenant" `
+    $code = & curl.exe -s -o NUL -w "%{http_code}" -X PUT -H "X-Tenant-Id: $Tenant" -H "X-API-Key: $ApiKey" `
         -H "Content-Type: application/octet-stream" --data-binary "@$tmp" `
         "$Gateway/api/v1/assets/$assetId/chunks/$i"
     Check "PUT chunk $i/$($totalChunks - 1) 204" ("$code" -eq '204') "http=$code bytes=$length"
 }
 # idempotent chunk retry: re-uploading chunk 0 must not increase the counter
 $chunk0 = $script:tmpFiles[0]
-$headers = & curl.exe -s -D - -o NUL -X PUT -H "X-Tenant-Id: $Tenant" `
+$headers = & curl.exe -s -D - -o NUL -X PUT -H "X-Tenant-Id: $Tenant" -H "X-API-Key: $ApiKey" `
     -H "Content-Type: application/octet-stream" --data-binary "@$chunk0" `
     "$Gateway/api/v1/assets/$assetId/chunks/0"
 $receivedAtRetry = ($headers | Select-String -Pattern 'X-Chunks-Received:\s*(\d+)').Matches.Groups[1].Value
@@ -217,7 +219,7 @@ $init2 = Invoke-JsonParsed POST "$Gateway/api/v1/assets" $initBody $Tenant
 $assetId2 = if ($init2.Json) { $init2.Json.asset_id } else { '' }
 for ($i = 0; $i -lt $totalChunks; $i++) {
     $tmp = $script:tmpFiles[$i]
-    $code = & curl.exe -s -o NUL -w "%{http_code}" -X PUT -H "X-Tenant-Id: $Tenant" `
+    $code = & curl.exe -s -o NUL -w "%{http_code}" -X PUT -H "X-Tenant-Id: $Tenant" -H "X-API-Key: $ApiKey" `
         -H "Content-Type: application/octet-stream" --data-binary "@$tmp" `
         "$Gateway/api/v1/assets/$assetId2/chunks/$i"
     if ("$code" -ne '204') { Check "dedupe upload chunk $i" $false "http=$code" }
