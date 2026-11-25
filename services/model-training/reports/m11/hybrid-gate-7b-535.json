@@ -1,0 +1,30 @@
+{
+  "model": "merged-sft-7b (vLLM on AutoDL RTX4090 48G)",
+  "rows": 535,
+  "decisions": {
+    "block": 346,
+    "manual": 28,
+    "pass": 161
+  },
+  "confusion": {
+    "tp": 346,
+    "fp": 0,
+    "fn": 26,
+    "tn": 163
+  },
+  "recall": 0.9301,
+  "false_positive_rate": 0.0,
+  "wrong_clause_rate": 0.0,
+  "wrong_citations": 0,
+  "cited_rows": 346,
+  "exact_clause_rows": 346,
+  "manual_rows": 28,
+  "model_unavailable_rows": 0,
+  "gate_checks": {
+    "recall >= 0.95": false,
+    "false_positive_rate <= 0.03": true,
+    "wrong_clause_rate == 0": true,
+    "manual_rows <= 5%": false
+  },
+  "gate_passed": false
+}

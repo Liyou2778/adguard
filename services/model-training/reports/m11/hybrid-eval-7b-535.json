@@ -1,0 +1,72 @@
+{
+  "rows": 535,
+  "model": "merged-sft-7b (vLLM 0.6.3, AutoDL RTX4090 48G)",
+  "rule_baseline": {
+    "decisions": {
+      "block": 346,
+      "manual": 28,
+      "pass": 161
+    },
+    "confusion": {
+      "tp": 346,
+      "fp": 0,
+      "fn": 26,
+      "tn": 163
+    },
+    "recall": 0.9301,
+    "false_positive_rate": 0.0,
+    "wrong_clause_rate": 0.0,
+    "wrong_citations": 0,
+    "cited_rows": 346,
+    "manual_rows": 28,
+    "manual_rate": 0.0523,
+    "model_unavailable_rows": 0
+  },
+  "hybrid_7b": {
+    "decisions": {
+      "block": 346,
+      "manual": 28,
+      "pass": 161
+    },
+    "confusion": {
+      "tp": 346,
+      "fp": 0,
+      "fn": 26,
+      "tn": 163
+    },
+    "recall": 0.9301,
+    "false_positive_rate": 0.0,
+    "wrong_clause_rate": 0.0,
+    "wrong_citations": 0,
+    "cited_rows": 346,
+    "manual_rows": 28,
+    "manual_rate": 0.0523,
+    "model_unavailable_rows": 0
+  },
+  "transitions": {
+    "block->block": 346,
+    "manual->manual": 28,
+    "pass->pass": 161
+  },
+  "rule_block_downgraded": 0,
+  "hybrid_manual_from_rule_pass": 0,
+  "hybrid_pass_from_rule_manual": 0,
+  "downgraded_samples": [],
+  "manual_from_pass_samples": [],
+  "pass_from_manual_samples": [],
+  "quality_gate_checks": {
+    "recall >= 0.95": false,
+    "false_positive_rate <= 0.03": true,
+    "wrong_clause_rate == 0": true,
+    "manual_rate <= 0.05": false
+  },
+  "safety_gate_checks": {
+    "rule_block_downgraded == 0": true,
+    "model_unavailable_rows == 0": true,
+    "wrong_clause_rate == 0": true,
+    "false_positive_rate <= 0.03": true,
+    "manual_rate <= 0.05": false
+  },
+  "quality_gate_passed": false,
+  "safety_gate_passed": false
+}

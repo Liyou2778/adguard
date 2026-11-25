@@ -1,0 +1,7 @@
+instance=AutoDL 西北B区 456机（克隆实例 autodl-instance-redacted）
+gpu=NVIDIA GeForce RTX 4090, 49140 MiB, driver 580.95.05
+vllm_version=0.6.3.post1
+torch=2.4.0+cu121
+model=/root/autodl-tmp/adguard-m5/models/merged-sft-7b (15G, 4 shards)
+chat_completions_requests=1072 (2 runs x 536; every row scored by the model)
+instance_shutdown=yes (after evidence collection)
