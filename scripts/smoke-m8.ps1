@@ -17,10 +17,10 @@ function Check([string]$Name, [bool]$Ok, [string]$Detail = '') {
     $color = if ($Ok) { 'Green' } else { 'Red' }
     Write-Host ("  [{0}] {1}  {2}" -f $status, $Name, $Detail) -ForegroundColor $color
 }
-function Invoke-Api([string]$Method, [string]$Url, $Body = $null, [string]$Token = '', [string]$TenantHeader = '', [switch]$Raw) {
+function Invoke-Api([string]$Method, [string]$Url, $Body = $null, [string]$Token = '', [string]$TenantHeader = '', [switch]$Raw, [switch]$Anonymous) {
     $headers = @{}
     if ($Token) { $headers['Authorization'] = "Bearer $Token" }
-    if ($AdminKey) { $headers['X-Admin-Key'] = $AdminKey }
+    if ($AdminKey -and -not $Anonymous) { $headers['X-Admin-Key'] = $AdminKey }
     if ($TenantHeader) { $headers['X-Tenant-Id'] = $TenantHeader }
     $resp = $null; $content = ''
     try {
@@ -73,7 +73,7 @@ $adminToken = if ($login.Json) { $login.Json.access_token } else { '' }
 Check 'admin login 200 + JWT' ($login.Status -eq 200 -and $adminToken.Length -gt 40) "status=$($login.Status)"
 $me = Invoke-Api GET "$ControlPlane/auth/me" $null $adminToken
 Check 'GET /auth/me role=admin' ($me.Json -and $me.Json.role -eq 'admin') "role=$($me.Json.role)"
-$unauth = Invoke-Api GET "$ControlPlane/admin/users"
+$unauth = Invoke-Api GET "$ControlPlane/admin/users" $null '' '' -Anonymous
 if ($AuthRequired) {
     Check 'unauthenticated /admin/users -> 401 (prod mode)' ($unauth.Status -eq 401) "status=$($unauth.Status)"
 } else {

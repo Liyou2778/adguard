@@ -28,7 +28,9 @@ import java.util.Set;
 public class AuthInterceptor implements HandlerInterceptor {
 
     private static final Logger log = LoggerFactory.getLogger(AuthInterceptor.class);
-    private static final Set<String> PUBLIC_PREFIXES = Set.of("/actuator/", "/admin-ui/", "/public/");
+    // /internal/* is service-to-service (gateway -> control plane) and is scoped by the host
+    // firewall / security group; it is not exposed through nginx.
+    private static final Set<String> PUBLIC_PREFIXES = Set.of("/actuator/", "/admin-ui/", "/public/", "/internal/");
     private static final Set<String> PUBLIC_EXACT = Set.of("/auth/login", "/auth/register", "/healthz",
             "/error", "/favicon.ico");
     private static final Set<String> ADMIN_ONLY_PREFIXES = Set.of(
